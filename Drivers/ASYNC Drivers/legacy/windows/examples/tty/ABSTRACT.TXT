@@ -1,0 +1,64 @@
+ 
+ 
+ COMM: Demonstrates the Communications APIs
+ 
+ COMM demonstrates the basics of using the Microsoft(R)
+ Win32(R) communications application programming interfaces
+ (APIs) while maintaining a common code base with Microsoft
+ Windows(R) 16-bit code.
+ 
+ The COMM program performs communications using the Windows
+ OpenFile, ReadFile, SetCommState, SetCommMask,
+ WaitCommEvent, WriteFile, and CloseFile functions. It
+ creates a background thread to watch for COMM receiver
+ events, and posts a notification message to the main
+ terminal window. Foreground character processing is
+ written to the communications port. Simple TTY character
+ translation is performed, and a screen buffer is
+ implemented for use as the input/output (I/O) window.
+ Overlapped file I/O techniques are also demonstrated.
+ 
+ When using COMM, the baud rate, data bits, stop bits,
+ parity, port, RTS/CTS (Request to Send/Clear to Send)
+ handshaking, DTR/DSR (Data Terminal Ready/Data Set Ready)
+ handshaking, and XON/XOFF handshaking can be changed under
+ the Settings menu. Once the communications settings have
+ been selected, you can use the Action menu to connect to
+ or disconnect from the TTY program.
+ 
+ COMM is a Microsoft Win32 Software Development Kit (SDK)
+ sample. It was built with Microsoft Visual C++(TM) version
+ 2.1, the 32-bit development system for Microsoft Windows,
+ Windows 95, and Windows NT(TM), and was tested under
+ Windows 95 and Windows NT version 3.51.
+ 
+ KEYWORDS: CD12; BeginPaint; BitBlt; CheckDlgButton;
+ ChooseFont; ClearCommError; CloseComm; CloseHandle;
+ CreateCaret; CreateCompatibleDC; CreateEvent; CreateFile;
+ CreateFontIndirect; CreateThread; CreateWindow;
+ DefWindowProc; DeleteDC; DeleteObject; DestroyCaret;
+ DialogBoxParam; DispatchMessage; EnableCommNotification;
+ EnableMenuItem; EnableWindow; EndDialog; EndPaint;
+ EscapeCommFunction; ExtTextOut; FreeProcInstance;
+ GetCommError; GetCommEventMask; GetCommState; GetDC;
+ GetDlgItem; GetDlgItemText; GetFreeSpace;
+ GetFreeSystemResources; GetLastError; GetMenu; GetMessage;
+ GetOverlappedResult; GetParent; GetSysColor;
+ GetTextMetrics; GetVersion; GetWinFlags; GetWindowRect;
+ HIBYTE; HIWORD; HideCaret; InvalidateRect;
+ IsDlgButtonChecked; LOBYTE; LOWORD; LoadAccelerators;
+ LoadBitmap; LoadCursor; LoadIcon; LoadString; LocalAlloc;
+ LocalFree; MAKEINTRESOURCE; MAKELONG; MakeProcInstance;
+ MessageBeep; MessageBox; OpenComm; PeekMessage;
+ PostMessage; PostQuitMessage; PurgeComm; RGB; ReadComm;
+ ReadFile; RegisterClass; ReleaseDC; ResetEvent;
+ ResumeThread; ScrollWindow; SelectObject;
+ SendDlgItemMessage; SendMessage; SetBkColor; SetBkMode;
+ SetCaretPos; SetCommEventMask; SetCommMask; SetCommState;
+ SetCommTimeouts; SetCursor; SetDlgItemText; SetEvent;
+ SetScrollPos; SetScrollRange; SetTextColor;
+ SetThreadPriority; SetupComm; ShowCaret; ShowWindow;
+ TranslateAccelerator; TranslateMessage; UpdateWindow;
+ WaitCommEvent; WaitForSingleObject; WinMain; WriteComm;
+ WriteFile; _fmemmove; _fmemset; lstrcpy; lstrlen; max;
+ memset; min; wsprintf

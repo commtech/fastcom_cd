@@ -1,0 +1,414 @@
+diff -uNr linux-2.6.0/drivers/serial/8250_pci.c linux-2.6.0-modified/drivers/serial/8250_pci.c
+--- linux-2.6.0/drivers/serial/8250_pci.c	2003-12-17 20:59:17.000000000 -0600
++++ linux-2.6.0-modified/drivers/serial/8250_pci.c	2009-11-17 14:34:11.000000000 -0600
+@@ -140,6 +140,176 @@
+ 	return 0;
+ }
+ 
++static int __devinit fastcom_init(struct pci_dev *dev)
++{
++	int rc = 0;
++	unsigned int amcc_5920;
++	unsigned int fastcom_features;
++
++	amcc_5920 = pci_resource_start(dev, 0);
++	fastcom_features = pci_resource_start(dev, 2);
++
++	outb(0x20, amcc_5920+0x39);//turn on interrupts on AMCC pci controller
++
++	//bar3 setting 
++	//for RS422/RS485 cards will control RS-485 control (must also configure the 850 to auto485 control...
++	//offset 0
++	//bit0 is CTS disable (force CTS active)
++	//bit1 is RS485 enable (allow driver to tri-state when not sending)
++	//bit2 is RX Echo cancel (turns off receiver while transmitting for 2 wire 485 connections)
++	//bit3 is 485 control signal select (0 is OUT1 (auto 485 control pin of the 16850 uart), 1 is RTS for older software controlled 485)
++	//bit4,5,6,7 controls ch2...
++	//offset 1
++	//clock generator control signals for FC4222 board
++	//bits 0,1,2,3 controls ch3...
++	//bits 4,5,6,7 controls ch4...
++	//offset 2, clock generator control signals for FC4224 board
++	//for RS232 cards
++	//offset 0 is the clock generator control signals
++
++	//defaults to RS422 operation, no RX echo cancel, CTS enabled, 485 control source is OUT1
++	//clock generator defaults to reference frequency of 18.432MHz
++	//you could change/deviate from the defaults here if needed
++
++	switch (dev->device) {
++		case PCI_DEVICE_ID_FCIG4221:
++			rc = 1;
++		case PCI_DEVICE_ID_FCIG2322:
++		case PCI_DEVICE_ID_FC4222:
++			rc = 2;
++			break;
++		case PCI_DEVICE_ID_FC4224:
++		case PCI_DEVICE_ID_FC2324:
++			rc = 4;
++			break;
++		case PCI_DEVICE_ID_FC2328:
++			rc = 8;
++			break;
++		default:
++			rc = 0;
++			break;
++	}
++
++	return rc;
++}
++
++static int __devinit fastcom_335_init(struct pci_dev *dev)
++{
++	int rc = 0;
++	if( (dev->device==PCI_DEVICE_ID_FSCC) ||(dev->device==PCI_DEVICE_ID_SFSCC) || 
++            (dev->device==PCI_DEVICE_ID_FSCC232) || (dev->device==PCI_DEVICE_ID_SFSCC104_NOUA) || 
++            (dev->device==PCI_DEVICE_ID_SFSCC_4) || (dev->device==PCI_DEVICE_ID_SFSCC104) || 
++            (dev->device==PCI_DEVICE_ID_SFSCCLVDS) || (dev->device==PCI_DEVICE_ID_FSCC_4) || 
++            (dev->device==PCI_DEVICE_ID_SFSCC_4_LVDS) )
++	{
++		unsigned int fastcom_features = pci_resource_start(dev, 2);
++		
++		//could re/program clock generator here
++		//or set board specific features (rx echo cancel/485 enable)
++		//default to default clock (24MHz) and 422 mode
++		//+force async ON
++		//features register breakdown:
++		//bit 31 - jtag enable
++		//bit 30 - tck
++		//bit 29 - tdi
++		//bit 28 - tms
++		//bit 27 - tdo
++		//bit 26 - NC
++		//bit 25 - UART chB enable
++		//bit 24 - UART chA enable
++		//bit 23 - NC
++		//bit 22 - SD 485 enable chB
++		//bit 21 - TT 485 enable chB
++		//bit 20 - RxEcho cancel enable chB
++		//bit 19 - NC
++		//bit 18 - SD 485 enable chA
++		//bit 17 - TT 485 enable chA
++		//bit 16 - RxEcho cancel enable chA
++		//bit 15 - NC
++		//bit 14 - NC
++		//bit 13 - NC
++		//bit 12 - NC
++		//bit 11 - Strobe chB
++		//bit 10 - NC
++		//bit 9  - clk chB
++		//bit 8  - dta chB
++		//bit 7  - NC
++		//bit 6  - NC
++		//bit 5  - NC
++		//bit 4  - NC
++		//bit 3  - Strobe chA
++		//bit 2  - NC
++		//bit 1  - clk chA
++		//bit 0  - dta chA
++		//
++		//bits 31-26 should always be 0
++		//bits 15-0 shoudl always be 0
++		outl(0x03000000, fastcom_features);
++		//if you want to use the FSCC sync ports and you are using this code you must re-program this register
++		//after this driver loads.
++		rc = 2;
++	}
++	else {
++		u8 __iomem *p = ioremap(pci_resource_start(dev, 0),pci_resource_len(dev,0));
++
++		if (p == NULL)
++			return -ENOMEM;
++			
++		switch (dev->device) {
++			case PCI_DEVICE_ID_FC4222335:
++				writeb(0x00, p+0x93);//MPIOSEL
++				udelay(20);
++				writeb(0x00, p+0x92);//MPIOINV
++				udelay(20);
++				writeb(0x00, p+0x91);//MPIO3T
++				udelay(20);
++				writeb(0x00, p+0x89);//MPIOINT
++				udelay(20);
++				writeb(0x78, p+0x90);//MPIOLVL
++				rc = 2;
++				break;
++				
++			case PCI_DEVICE_ID_FC4224335:
++				writeb(0x00, p+0x93);//MPIOSEL
++				udelay(20);
++				writeb(0x00, p+0x92);//MPIOINV
++				udelay(20);
++				writeb(0x00, p+0x91);//MPIO3T
++				udelay(20);
++				writeb(0x00, p+0x89);//MPIOINT
++				udelay(20);
++				writeb(0x78, p+0x90);//MPIOLVL
++				rc = 4;
++				break;
++				
++			case PCI_DEVICE_ID_FC2324335:
++				writeb(0xc0, p+0x93);//MPIOSEL
++				udelay(20);
++				writeb(0xc0, p+0x92);//MPIOINV
++				udelay(20);
++				writeb(0x00, p+0x91);//MPIO3T
++				udelay(20);
++				writeb(0x00, p+0x89);//MPIOINT
++				udelay(20);
++				writeb(0x00, p+0x90);//MPIOLVL
++				rc = 4;
++				break;
++		}
++		//422 to 485 conversion,
++		//0x08 ->disable ch0 485
++		//0x10 ->disable ch1 485
++		//0x20 ->disable ch2 485
++		//0x40 ->disable ch3 485
++		//0x80 ->rxecho cancel (all 4 ports)
++		//set MPIOLVL appropriately, above defaults to 422 with no rx echo cancel.
++		//if you set the 485 enable you probably also have to setup the uart to do 
++		//its auto 485 handling or make sure that it is being handled by software
++		//(setting RTS prior to transmit, turning off RTS after transmit)
++		iounmap(p);
++	}
++	return rc;
++}
++
+ /*
+  * AFAVLAB uses a different mixture of BARs and offsets
+  * Not that ugly ;) -- HW
+@@ -560,6 +730,28 @@
+ 		.subdevice	= PCI_ANY_ID,
+ 		.setup		= afavlab_setup,
+ 	},
++ 	/*
++	 * Commtech Fastcom(tm) async PCI cards
++	 */
++	{
++		.vendor		= PCI_VENDOR_ID_AMCC,
++		.device		= PCI_ANY_ID,
++		.subvendor	= PCI_ANY_ID,
++		.subdevice	= PCI_ANY_ID,
++		.init		= fastcom_init,
++		.setup		= pci_default_setup,
++	},
++	/*
++	 * Commtech Fastcom(tm) async PCI-335 cards + Fastcom:FSCC
++	 */
++	{
++		.vendor		= PCI_VENDOR_ID_COMMTECH_FASTCOM,
++		.device		= PCI_ANY_ID,
++		.subvendor	= PCI_ANY_ID,
++		.subdevice	= PCI_ANY_ID,
++		.init		= fastcom_335_init,
++		.setup		= pci_default_setup,
++	},
+ 	/*
+ 	 * HP Diva
+ 	 */
+@@ -946,6 +1138,16 @@
+ 	/*
+ 	 * Board-specific versions.
+ 	 */
++	pbn_fastcom_4222,
++	pbn_fastcom_4224,
++	pbn_fastcom_2324,
++	pbn_fastcom_2328,
++	pbn_fastcom_ig4221,
++	pbn_fastcom_ig2322,
++	pbn_fastcom_4222_335,
++	pbn_fastcom_4224_335,
++	pbn_fastcom_2324_335,
++	pbn_fastcom_fscc,
+ 	pbn_panacom,
+ 	pbn_panacom2,
+ 	pbn_panacom4,
+@@ -1254,6 +1456,70 @@
+ 	/*
+ 	 * Entries following this are board-specific.
+ 	 */
++	 
++	/*
++	 * Commtech, Inc. 
++	*/
++	[pbn_fastcom_4222] = {
++		.flags		= FL_BASE1,
++		.num_ports	= 2,
++		.base_baud	= 1152000,
++		.uart_offset	= 8,
++	},
++	[pbn_fastcom_4224] = {
++		.flags		= FL_BASE1,
++		.num_ports	= 4,
++		.base_baud	= 1152000,
++		.uart_offset	= 8,
++	},
++	[pbn_fastcom_2324] = {
++		.flags		= FL_BASE1,
++		.num_ports	= 4,
++		.base_baud	= 1152000,
++		.uart_offset	= 8,
++	},
++	[pbn_fastcom_2328] = {
++		.flags		= FL_BASE1,
++		.num_ports	= 8,
++		.base_baud	= 1152000,
++		.uart_offset	= 8,
++	},
++	[pbn_fastcom_ig4221] = {
++		.flags		= FL_BASE1,
++		.num_ports	= 1,
++		.base_baud	= 1152000,
++		.uart_offset	= 8,
++	},
++	[pbn_fastcom_ig2322] = {
++		.flags		= FL_BASE1,
++		.num_ports	= 2,
++		.base_baud	= 1152000,
++		.uart_offset	= 8,
++	},
++	[pbn_fastcom_4222_335] = {
++		.flags		= FL_BASE0,
++		.num_ports	= 2,
++		.base_baud	= 1152000,
++		.uart_offset	= 0x200,
++	},
++	[pbn_fastcom_4224_335] = {
++		.flags		= FL_BASE0,
++		.num_ports	= 4,
++		.base_baud	= 1152000,
++		.uart_offset	= 0x200,
++	},
++	[pbn_fastcom_2324_335] = {
++		.flags		= FL_BASE0,
++		.num_ports	= 4,
++		.base_baud	= 1152000,
++		.uart_offset	= 0x200,
++	},
++	[pbn_fastcom_fscc] = {
++		.flags		= FL_BASE1,
++		.num_ports	= 2,
++		.base_baud	= 921600,
++		.uart_offset	= 8,
++	},
+ 
+ 	/*
+ 	 * Panacom - IOMEM
+@@ -1939,6 +2205,82 @@
+ 		pbn_b0_bt_1_460800 },
+ 
+ 	/*
++	 * Commtech Fastcom async PCI cards
++	 */
++	{	PCI_VENDOR_ID_AMCC, PCI_DEVICE_ID_FC4222,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_4222 },
++	{	PCI_VENDOR_ID_AMCC, PCI_DEVICE_ID_FC4224,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_4224 },
++	{	PCI_VENDOR_ID_AMCC, PCI_DEVICE_ID_FC2324,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_2324 },
++	{	PCI_VENDOR_ID_AMCC, PCI_DEVICE_ID_FC2328,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_2328 },
++	{	PCI_VENDOR_ID_AMCC, PCI_DEVICE_ID_FCIG4221,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_ig4221 },
++	{	PCI_VENDOR_ID_AMCC, PCI_DEVICE_ID_FCIG2322,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_ig2322 },
++	{	PCI_VENDOR_ID_COMMTECH_FASTCOM, PCI_DEVICE_ID_FC4222335,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_4222_335 },
++	{	PCI_VENDOR_ID_COMMTECH_FASTCOM, PCI_DEVICE_ID_FC4224335,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_4224_335 },
++	{	PCI_VENDOR_ID_COMMTECH_FASTCOM, PCI_DEVICE_ID_FC2324335,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_2324_335 },
++	{	PCI_VENDOR_ID_COMMTECH_FASTCOM, PCI_DEVICE_ID_FSCC,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_fscc },
++	{	PCI_VENDOR_ID_COMMTECH_FASTCOM, PCI_DEVICE_ID_SFSCC,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_fscc },
++	{	PCI_VENDOR_ID_COMMTECH_FASTCOM, PCI_DEVICE_ID_FSCC232,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_fscc },
++	{	PCI_VENDOR_ID_COMMTECH_FASTCOM, PCI_DEVICE_ID_SFSCC104_NOUA,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_fscc },
++	{	PCI_VENDOR_ID_COMMTECH_FASTCOM, PCI_DEVICE_ID_SFSCC_4,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_fscc },
++	{	PCI_VENDOR_ID_COMMTECH_FASTCOM, PCI_DEVICE_ID_SFSCC104,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_fscc },
++	{	PCI_VENDOR_ID_COMMTECH_FASTCOM, PCI_DEVICE_ID_SFSCCLVDS,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_fscc },
++	{	PCI_VENDOR_ID_COMMTECH_FASTCOM, PCI_DEVICE_ID_FSCC_4,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_fscc },
++	{	PCI_VENDOR_ID_COMMTECH_FASTCOM, PCI_DEVICE_ID_SFSCC_4_LVDS,
++		PCI_ANY_ID, PCI_ANY_ID,
++		0,
++		0, pbn_fastcom_fscc },
++
++	/*
+ 	 * RAStel 2 port modem, gerg@moreton.com.au
+ 	 */
+ 	{	PCI_VENDOR_ID_MORETON, PCI_DEVICE_ID_RASTEL_2PORT,
+diff -uNr linux-2.6.0/include/linux/pci_ids.h linux-2.6.0-modified/include/linux/pci_ids.h
+--- linux-2.6.0/include/linux/pci_ids.h	2003-12-17 20:58:47.000000000 -0600
++++ linux-2.6.0-modified/include/linux/pci_ids.h	2009-11-17 14:16:16.000000000 -0600
+@@ -1883,6 +1883,30 @@
+ #define PCI_DEVICE_ID_S3_ViRGE_MXPMV	0x8c03
+ #define PCI_DEVICE_ID_S3_SONICVIBES	0xca00
+ 
++/* Commtech, Inc. */
++
++#define PCI_VENDOR_ID_AMCC   0x10e8
++#define PCI_DEVICE_ID_FC4222 0x82c5
++#define PCI_DEVICE_ID_FC4224 0x82c4
++#define PCI_DEVICE_ID_FC2324 0x82ca
++#define PCI_DEVICE_ID_FC2328 0x8291
++#define PCI_DEVICE_ID_FCIG4221 0x82c6
++#define PCI_DEVICE_ID_FCIG2322 0x82c7
++
++#define PCI_VENDOR_ID_COMMTECH_FASTCOM 0x18f7
++#define PCI_DEVICE_ID_FC4222335 0x0004
++#define PCI_DEVICE_ID_FC4224335 0x0002
++#define PCI_DEVICE_ID_FC2324335 0x000a
++#define PCI_DEVICE_ID_FSCC      0x000f
++#define PCI_DEVICE_ID_SFSCC 0x0014
++#define PCI_DEVICE_ID_FSCC232 0x0016
++#define PCI_DEVICE_ID_SFSCC104_NOUA 0x0017
++#define PCI_DEVICE_ID_SFSCC_4 0x0018
++#define PCI_DEVICE_ID_SFSCC104 0x0019
++#define PCI_DEVICE_ID_SFSCCLVDS 0x001a
++#define PCI_DEVICE_ID_FSCC_4 0x001b
++#define PCI_DEVICE_ID_SFSCC_4_LVDS 0x001c
++
+ #define PCI_VENDOR_ID_DUNORD		0x5544
+ #define PCI_DEVICE_ID_DUNORD_I3000	0x0001
+ 

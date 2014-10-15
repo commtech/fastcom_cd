@@ -1,0 +1,92 @@
+; fastcom.inf
+;
+; Installation file (.inf) for the Fastcom:Async PCI-335 Ports
+;
+; (c) Copyright 2003 Commtech, Inc. 
+;
+
+[version]
+signature="$Windows NT$"
+Class=Ports
+ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
+Provider=%Manu%
+DriverVer=11/13/2003,1.2.2
+
+[DestinationDirs]
+ComPort.oem.NT.Copy = 12
+ComPort.oem.NT.Copydll = 10,system32
+
+[ControlFlags]
+ExcludeFromSelect=fcap_port
+
+; Drivers
+;----------------------------------------------------------
+[Manufacturer]
+%Manu%=Manu
+
+[Manu]
+%MYPNP0501.DeviceDesc% = ComPort.oem, FCPort ; Communications Port
+
+
+[ComPort.oem.NT]
+; NT install section, redirect
+; we also need to add this for benefit of Ports class
+AddReg=ComPort.oem.AddReg
+CopyFiles=ComPort.oem.NT.Copy,ComPort.oem.NT.Copydll
+
+[ComPort.oem.AddReg]
+; Let Ports class know this is a serial port
+HKR,,PortSubClass,1,01
+HKR,,EnumPropPages32,,"fcap_ports.dll,SerialPortPropPageProvider"
+
+[ComPort.oem.NT.Copy]
+fcap_port.sys
+ser15x.sys
+
+[ComPort.oem.NT.Copydll]
+fcap_ports.dll
+
+[ComPort.oem.NT.HW.AddReg]
+HKR,,"UpperFilters",0x00010008,"fcap_port"
+
+[ComPort.oem.NT.HW]
+; NT.HW section, redirect - ensure order of processing by doing all
+; entries as Needs.
+AddReg=ComPort.oem.NT.HW.AddReg
+
+[ComPort.oem.NT.Services]
+; add any other services here
+AddService = fcap_port,,fcap_port_Service_inst
+AddService = Ser15x, 0x00000002, Ser15x_Service_Inst, Ser15x_EventLog_Inst
+
+[fcap_port_Service_inst]
+DisplayName    = fcap_port
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\fcap_port.sys
+LoadOrderGroup = PNP Filter
+
+; -------------- Serial Port Driver install sections
+[Ser15x_Service_Inst]
+DisplayName    = %Ser15x.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_SYSTEM_START
+ErrorControl   = 0               ; SERVICE_ERROR_IGNORE
+ServiceBinary  = %12%\ser15x.sys
+LoadOrderGroup = Extended base
+
+[Ser15x_EventLog_Inst]
+AddReg = Ser15x_EventLog_AddReg
+
+[Ser15x_EventLog_AddReg]
+HKR,,EventMessageFile,0x00020000,"%%SystemRoot%%\System32\IoLogMsg.dll;%%SystemRoot%%\System32\drivers\ser15x.sys"
+HKR,,TypesSupported,0x00010001,7
+
+
+; User readable strings
+;----------------------------------------------------------
+[Strings]
+Manu = "Commtech, Inc."
+MYPNP0501.DeviceDesc 	= "Fastcom AsyncPCI-335 Communications Port"
+Ser15x.SVCDESC   	= "FCAP335 Serial port driver"

@@ -1,0 +1,73 @@
+For installation instructions, see the INSTALL file.
+
+There are serveral example programs/utilities that can be found in the utils
+directory.  If you have run make tools or make install, the compiled binaries
+are located in the utils/bin directory.  To install any of these utilities just 
+move them to one of your PATH directories or update your path to include this 
+directory.
+
+1.0 INITIALIZE THE FSCC
+
+    Each time the driver is loaded, the board/port must be initialized prior to 
+    use.  To initialize a port, you must do at least three things: 
+	1) Set the clock
+	2) Set configurations
+        3) set the board features register to select ASYNC or SYNC operation
+    This can be done in your program's code, or using the following utilities:
+
+1.1 FSCCP CLOCK
+
+    Program to set the main clock generator for the Fsccp channel.
+
+	$ ./setclock 0 frequency [ppm]
+
+
+1.2 FSCCP SETTINGS
+
+    The setfscc program will setup the board's configuration. 
+
+    Look at the set files (hdlcset, asyncset, bisyncset) that are included in 
+    the directory of setfscc. Modify these files to your liking.
+
+	$ ./setfscc 0 hdlcset
+
+1.3 Board Features
+    the getfeatures/setfeatures programs will configure the on board features register to 
+    select either SYNC or ASYNC mode operation, and the RS-485 control for the transmitters (SD & TT)
+    and the receive echo cancel feature.
+     
+        $ ./setfeatures 0 0 0 0 0
+
+    the useage is "setfeatures port RXECHO SD485 TT485 ASYNC"
+    a value of 0 disables the feature, a 1 enables the feature.
+    the command line above will configure FSCC port 0 to not use RX echo cancel(RX always on),
+    enable the transmitters all the time (RS-422), and switch to SYNC mode operation.
+    If you have patched the 8250_pci.c kernel serial driver to allow ttySx access to the async ports on 
+    the FSCC card then the default will be ASYNC operation, you can/must change it using this function
+    if you want to use the port as a SYNC port.
+    If you have not patched the kernel then the default will be SYNC operation.
+
+2.0 TESTING THE FSCC INSTALL
+
+    After building the driver and the example programs, you can test the 
+    installation of the card.  To do so you will need to build a loop back 
+    plug that connects the transmitter and receiver of a port together.
+    Refer to the hardware manul found on your CD at:
+
+	/fastcom_manuals/fsccp.pdf
+
+    When you have the loop back built and installed, you can test port 0:
+
+	$ cd /utils/bin
+	$ ./setclock 0 6000000
+	$ ./setfscc 0 hdlcset
+        $ ./setfeatures 0 0 0 0 0
+	$ ./rdwr 0 0 1022 h
+
+    Port 1:
+
+	$ ./setclock 1 6000000
+	$ ./setfscc 1 hdlcset
+        $ ./setfeatures 1 0 0 0 0
+	$ ./rdwr 1 1 1024 h
+

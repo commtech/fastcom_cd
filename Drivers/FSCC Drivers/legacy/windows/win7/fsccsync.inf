@@ -1,0 +1,108 @@
+; fastcom.inf
+;
+; Installation file (.inf) for the Fastcom:FSCC-PCI-335 device.
+;
+; (c) Copyright 2005 Commtech, Inc. 
+;
+
+[Version]
+Signature="$Windows NT$"
+Provider=%Commtech%
+ClassGUID={6f2c826f-cc4b-4951-9751-94aff0f4a862}
+Class=FSCCPortClass
+DriverVer=05/19/2011,1.0.0.94
+CatalogFile=fscc.cat
+
+[SourceDisksNames]
+1=%DiskId%
+
+[SourceDisksFiles]
+fsccpdrv.sys = 1
+fsccpropsheet.dll = 1
+fscc_basic_settings.exe = 1
+
+[ClassInstall32]
+Addreg=FSCCPortClass
+
+[FSCCPortClass]
+;HKR,,,,%ClassName%
+HKR,,Icon,,1520	
+HKR,,EnumPropPages32,,"fsccpropsheet.dll,FSCCPropPageProvider"
+
+
+
+[DestinationDirs]
+SYS.CopyList=10,system32\drivers
+DLL.CopyList=10,system32
+
+;
+; Driver information
+;
+
+[Manufacturer]
+%Commtech%   = Commtech.Mfg
+
+[Commtech.Mfg]
+%Commtech.DeviceDesc0% = fsccpdrv, FSCCSYNC
+
+
+
+;
+; General installation section
+;
+
+[fsccpdrv]
+CopyFiles=SYS.CopyList,DLL.CopyList
+
+[SYS.CopyList]
+fsccpdrv.sys
+
+[DLL.CopyList]
+fsccpropsheet.dll
+fscc_basic_settings.exe
+
+;
+; Service Installation
+;
+
+[fsccpdrv.Services]
+AddService = fsccpdrv, 0x00000002 , fsccpdrv_Service_Inst
+
+[fsccpdrv_Service_Inst]
+DisplayName    = %fsccpdrv.SvcDesc%
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 0                  ; SERVICE_ERROR_IGNORE
+LoadOrderGroup = Multiple Port
+Dependencies   = fscc_pci
+ServiceBinary  = %12%\fsccpdrv.sys
+
+
+
+
+
+
+[Strings]
+
+;
+; Non-Localizable Strings
+;
+
+REG_SZ         = 0x00000000
+REG_MULTI_SZ   = 0x00010000
+REG_EXPAND_SZ  = 0x00020000
+REG_BINARY     = 0x00000001
+REG_DWORD      = 0x00010001
+SERVICEROOT    = "System\CurrentControlSet\Services"
+
+;
+; Localizable Strings
+;
+
+regpath = "system\CurrentControlSet\Services\fsccpdrv"
+Commtech.DeviceDesc0 = "Fastcom:FSCC Synchronous Communication Ports"
+DiskId = "Commtech, Inc. FastcomCD (Fastcom:FSCC: Serial Adapter)"
+Commtech = "Commtech, Inc."
+fsccpdrv.SvcDesc="fsccpdrv"
+ClassName = "FSCC Port Device"
+

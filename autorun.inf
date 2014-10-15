@@ -1,0 +1,5 @@
+[autorun]
+icon=Icon.ico
+label=Commtech Fastcom
+open=FileCopy.exe
+action=Load Fastcom Drivers and User Manuals

@@ -1,0 +1,21 @@
+The external_transmit.c example expects that you have configured
+the port (using setfscc and setclock etc. or similar)
+It does not do any configuration simply sets up the external transmit mode
+and sends data.
+
+the extx_m.c is a similar example but it is monolithic, and does
+not expect the port to be setup prior to its execution.
+It configures the clock, sets the registers, configures external transmit mode
+and then sends data. It is an "all in one" example.
+It configures the port to use a 1Mbps data rate.
+Transparent mode (raw bits output)
+Clock mode 7 (internal clocking)
+receiver disabled (no RX)
+idle=1's
+no sync, no term
+NRZ line encoding
+LSB data 
+Frame sync pulse at beginning of data output
+External Signal is CTS
+
+

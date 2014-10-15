@@ -1,0 +1,50 @@
+#################################################################################
+#    FSCC settings file                                                         #
+#    This file uses the following format:                                       #
+#    register = 0xYY                                                            # 
+#                                                                               #
+#    where register is one of the members of struct escc_setup                  #
+#    (see  or fsccdrv.h)
+#
+#    the register name must be in column 1(no tabs or spaces preceeding it)     #
+#                                                                               #
+#    The 0xYY is the value to be written to that register (in HEX)              #
+#                                                                               #
+#    The FSCC  data sheet will give you a good idea of what each register does, #
+#    I don't see any point in recreating the data sheet here                    #
+#################################################################################
+#shared with all modes
+fifot = 0x08001000
+cmdr  = 0x08020000
+ccr0  = 0x0210011e
+ccr1  = 0x04000008
+ccr2  = 0x00000000
+bgr   = 0x00000000
+ssr   = 0x0000007e
+smr   = 0x00000000
+tsr   = 0x0000007e
+tmr   = 0x00000000
+rar   = 0x00000000
+ramr  = 0x00000000
+ppr   = 0x00000000
+tcr   = 0x04c4b401
+imr   = 0x00000000
+#receive buffering paramters
+#number of receive (frame) buffers
+n_rbufs = 0x0a
+
+#size of each receive frame buffer
+n_rfsize_max = 0x0400
+
+#transmit buffering parameters
+#number of transmit (frame) buffers
+n_tbufs = 0x64
+
+#size of each transmit frame buffer
+n_tfsize_max = 0x0400
+
+#################################################################################
+#                                                                               #
+# End of settings file                                                          #
+#                                                                               #
+#################################################################################

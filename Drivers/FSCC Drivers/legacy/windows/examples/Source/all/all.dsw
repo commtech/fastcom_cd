@@ -1,0 +1,440 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "all"=.\all.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name flushrx
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name flushtx
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name fsccgetset
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name fsccset
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name fsccterm
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name getfeatures
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name getfreq
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name loop
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name rcheck
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name read
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name readreg
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name rx
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name rxready
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name sendfile
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name setclock
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name setfeatures
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name status
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name timed_transmit
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name trx
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name ttx
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name tx
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name tx_repeat
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name txactive
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name write_random
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name writereg
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "flushrx"=..\flushrx\flushrx.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "flushtx"=..\flushtx\flushtx.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "fsccgetset"=..\fsccgetset\fsccgetset.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "fsccset"=..\fsccset\fsccset.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "fsccterm"=..\fsccterm\fsccterm.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "getfeatures"=..\getfeatures\getfeatures.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "getfreq"=..\getfreq\getfreq.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "loop"=..\loop\loop.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "rcheck"=..\xsync_special\rcheck\rcheck.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "read"=..\read\read.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "readmult"=..\receive_multiple\readmult\readmult.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "readreg"=..\readreg\readreg.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "rx"=..\xsync_special\rx\rx.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "rxmult"=..\receive_multiple\rxmult\rxmult.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "rxready"=..\rxready\rxready.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "sendfile"=..\sendfile\sendfile.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "setclock"=..\setclock\setclock.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "setfeatures"=..\setfeatures\setfeatures.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "status"=..\status\status.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "timed_transmit"=..\timed_transmit\timed_transmit.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "trx"=..\xsync_special\transparent\trx\trx.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ttx"=..\xsync_special\transparent\ttx\ttx.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "tx"=..\xsync_special\tx\tx.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "tx_repeat"=..\tx_repeat\tx_repeat.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "txactive"=..\txactive\txactive.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "usedma"=..\usedma\usedma.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "write_random"=..\writerandom\write_random.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "writereg"=..\writereg\writereg.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+
