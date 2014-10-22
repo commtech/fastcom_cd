@@ -1,11 +1,11 @@
 # RX Multiple
 
 ###### Support
-| Code           | Version
-| -------------- | --------
-| `fscc-windows` | `v2.2.9` 
-| `fscc-linux`   | `v2.2.4` 
-| `cppfscc`      | `v1.0.0`
+| Code | Version |
+| ---- | ------- |
+| fscc-windows | 2.2.9 |
+| fscc-linux | 2.2.4 |
+| cppfscc | 1.0.0 |
 
 
 ## Get
@@ -18,9 +18,7 @@ bool GetRxMultiple(void) throw();
 #include <fscc.hpp>
 ...
 
-bool status;
-
-status = p.GetRxMultiple();
+bool status = p.GetRxMultiple();
 ```
 
 
@@ -53,5 +51,5 @@ p.DisableRxMultiple();
 
 
 ### Additional Resources
-- Complete example: [`examples\rx-multiple.cpp`](https://github.com/commtech/cppfscc/blob/master/examples/rx-multiple.cpp)
-- Implemenation details: [`src\fscc.cpp`](https://github.com/commtech/cppfscc/blob/master/src/fscc.cpp)
+- Complete example: [`examples/rx-multiple.cpp`](../examples/rx-multiple.cpp)
+- Implementation details: [`src/fscc.cpp`](../src/fscc.cpp)

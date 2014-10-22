@@ -1,11 +1,11 @@
 # Ignore Timeout
 
 ###### Support
-| Code           | Version
-| -------------- | --------
-| `fscc-windows` | `v2.0.0` 
-| `fscc-linux`   | `v2.0.0` 
-| `cppfscc`      | `v1.0.0`
+| Code | Version |
+| ---- | ------- |
+| fscc-windows | 2.0.0 |
+| fscc-linux | 2.0.0 |
+| cppfscc | 1.0.0 |
 
 
 ## Get
@@ -19,9 +19,7 @@ bool GetIgnoreTimeout(void) throw();
 #include <fscc.hpp>
 ...
 
-bool status;
-
-status = p.GetIgnoreTimeout();
+bool status = p.GetIgnoreTimeout();
 ```
 
 
@@ -54,5 +52,5 @@ p.DisableIgnoreTimeout()
 
 
 ### Additional Resources
-- Complete example: [`examples\ignore-timeout.cpp`](https://github.com/commtech/cppfscc/blob/master/examples/ignore-timeout.cpp)
-- Implemenation details: [`src\fscc.cpp`](https://github.com/commtech/cppfscc/blob/master/src/fscc.cpp)
+- Complete example: [`examples/ignore-timeout.cpp`](../examples/ignore-timeout.cpp)
+- Implementation details: [`src/fscc.cpp`](../src/fscc.cpp)

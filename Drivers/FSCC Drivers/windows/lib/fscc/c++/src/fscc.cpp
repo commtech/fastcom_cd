@@ -20,6 +20,7 @@
 
 #include <cstdio>
 #include <sstream>
+#include <memory>
 
 #include <fscc.h>
 
@@ -231,37 +232,33 @@ unsigned Port::Read(char *buf, unsigned size, unsigned timeout) throw(SystemExce
 
 std::string Port::Read(unsigned size) throw(SystemException)
 {
-    char *buf = new char[size]();
+    std::unique_ptr<char []> buf(new char[size]);
     std::string str;
 
     try {
-        Read(buf, size);
+        Read(buf.get(), size);
     }
     catch (SystemException &e) {
-        delete buf;
         throw e;
     }
 
-    str.assign(buf);
-    delete buf;
+    str.assign(buf.get());
     return str;
 }
 
 std::string Port::Read(unsigned size, unsigned timeout) throw(SystemException)
 {
-    char *buf = new char[size]();
+    std::unique_ptr<char[]> buf(new char[size]);
     std::string str;
 
     try {
-        Read(buf, size, timeout);
+        Read(buf.get(), size, timeout);
     }
     catch (SystemException &e) {
-        delete buf;
         throw e;
     }
 
-    str.assign(buf);
-    delete buf;
+    str.assign(buf.get());
     return str;
 }
 

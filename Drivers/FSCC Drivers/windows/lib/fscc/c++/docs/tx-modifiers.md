@@ -1,16 +1,18 @@
 # TX Modifiers
 
-- XF - Normal transmit - disable modifiers
-- XREP - Transmit repeat
-- TXT - Transmit on timer
-- TXEXT - Transmit on external signal
+| Modifiers | Value | Description |
+| --------- | -----:| ----------- |
+| `XF` | 0 | Normal transmit (disable modifiers) |
+| `XREP` | 1 | Transmit frame repeatedly |
+| `TXT` | 2 | Transmit frame on timer |
+| `TXEXT` | 4 | Transmit frame on external signal |
 
 ###### Support
-| Code           | Version
-| -------------- | --------
-| `fscc-windows` | `v2.0.0` 
-| `fscc-linux`   | `v2.0.0` 
-| `cppfscc`      | `v1.0.0`
+| Code | Version |
+| ---- | ------- |
+| fscc-windows | 2.0.0 |
+| fscc-linux | 2.0.0 |
+| cppfscc | 1.0.0 |
 
 
 ## Get
@@ -23,9 +25,7 @@ unsigned GetTxModifiers(void) throw();
 #include <fscc.hpp>
 ...
 
-unsigned modifiers;
-
-modifiers = p.GetTxModifiers();
+unsigned modifiers = p.GetTxModifiers();
 ```
 
 
@@ -34,9 +34,9 @@ modifiers = p.GetTxModifiers();
 void SetTxModifiers(unsigned modifiers) throw();
 ```
 
-| Parameter   | Type           | Description
-| ------------| -------------- | ----------------------------
-| `modifiers` | `unsigned int` | The modifiers values to set
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `modifiers` | `unsigned int` | The modifiers values to set |
 
 ###### Examples
 ```c++
@@ -48,5 +48,5 @@ p.SetTxModifiers(Fscc::TXT | Fscc::XREP);
 
 
 ### Additional Resources
-- Complete example: [`examples\tx-modifiers.cpp`](https://github.com/commtech/cppfscc/blob/master/examples/tx-modifiers.cpp)
-- Implemenation details: [`src\fscc.cpp`](https://github.com/commtech/cppfscc/blob/master/src/fscc.cpp)
+- Complete example: [`examples/tx-modifiers.cpp`](../examples/tx-modifiers.cpp)
+- Implementation details: [`src/fscc.cpp`](../src/fscc.cpp)

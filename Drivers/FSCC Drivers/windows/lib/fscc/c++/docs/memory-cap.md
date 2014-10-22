@@ -1,15 +1,14 @@
 # Memory Cap
-If your system has limited memory available, there are safety checks in place to 
-prevent spurious incoming data from overrunning your system. Each port has an 
-option for setting it's input and output memory cap.
+
+If your system has limited memory available, there are safety checks in place to prevent spurious incoming data from overrunning your system. Each port has an option for setting it's input and output memory cap.
 
 
 ###### Support
-| Code           | Version
-| -------------- | --------
-| `fscc-windows` | `v2.0.0` 
-| `fscc-linux`   | `v2.0.0` 
-| `cppfscc`      | `v1.0.0`
+| Code | Version |
+| ---- | ------- |
+| fscc-windows | 2.0.0 |
+| fscc-linux | 2.0.0 |
+| cppfscc | 1.0.0 |
 
 
 ## Structure
@@ -26,8 +25,7 @@ struct MemoryCap {
 void Reset(void);
 ```
 
-The `Reset()` helper function should be called any time you want to reuse a
-`MemoryCap` structure. It will reset the structure to it's initial state.
+The `Reset()` helper function should be called any time you want to reuse a `MemoryCap` structure. It will reset the structure to it's initial state.
 
 
 ## Get
@@ -40,11 +38,10 @@ MemoryCap GetMemoryCap(void) throw();
 #include <fscc.hpp>
 ...
 
-memcap = p.GetMemoryCap();
+MemoryCap memcap = p.GetMemoryCap();
 ```
 
-At this point `memcap.input` and `memcap.output` would be set to their respective
-values.
+At this point `memcap.input` and `memcap.output` would be set to their respective values.
 
 
 ## Set
@@ -52,9 +49,9 @@ values.
 void SetMemoryCap(const MemoryCap &memcap) throw();
 ```
 
-| Parameter | Type        | Description
-| ----------| ----------- | ----------------------------
-| `memcap`  | `MemoryCap` | The memory cap values to set
+| Parameter | Type | Description |
+| ----------| ---- | ----------- |
+| `memcap` | `MemoryCap` | The memory cap values to set |
 
 ###### Examples
 ```c++
@@ -64,12 +61,12 @@ void SetMemoryCap(const MemoryCap &memcap) throw();
 MemoryCap memcap;
 
 memcap.input = 1000000; // 1 MB
-memcap.output = 2000000; // 2 MB
+memcap.output = 1000000; // 1 MB
 
 p.SetMemoryCap(memcap);
 ```
 
 
 ### Additional Resources
-- Complete example: [`examples\memory-cap.cpp`](https://github.com/commtech/cppfscc/blob/master/examples/memory-cap.cpp)
-- Implemenation details: [`src\fscc.cpp`](https://github.com/commtech/cppfscc/blob/master/src/fscc.cpp)
+- Complete example: [`examples/memory-cap.cpp`](../examples/memory-cap.cpp)
+- Implementation details: [`src/fscc.cpp`](../src/fscc.cpp)

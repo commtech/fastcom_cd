@@ -1,20 +1,15 @@
 # Purge
-Between the hardware FIFO and the driver's software buffers there are multiple places data could 
-be stored, excluding your application code. If you ever need to clear this data and start fresh, 
-there are a couple of methods you can use.
 
-_A `Purge()` (receive side)
-is required after changing the `MODE` bits in the `CCR0` register. If you need to change
-the `MODE` bits but don't have a clock present, change the `CM` bits to `0x7` temporarily. This will give 
-you an internal clock to switch modes. You can then switch to your desired `CM` now that your `MODE` is 
-locked in._
+Between the hardware FIFO and the driver's software buffers there are multiple places data could  be stored, excluding your application code. If you ever need to clear this data and start fresh, there are a couple of methods you can use.
+
+_A `Purge()` (receive side) is required after changing the `MODE` bits in the `CCR0` register. If you need to change the `MODE` bits but don't have a clock present, change the `CM` bits to `0x7` temporarily. This will give you an internal clock to switch modes. You can then switch to your desired `CM` now that your `MODE` is locked in._
 
 ###### Support
-| Code           | Version
-| -------------- | --------
-| `fscc-windows` | `v2.0.0` 
-| `fscc-linux`   | `v2.0.0` 
-| `cppfscc`      | `v1.0.0`
+| Code | Version |
+| ---- | ------- |
+| fscc-windows | 2.0.0 |
+| fscc-linux | 2.0.0 |
+| cppfscc | 1.0.0 |
 
 
 ## Execute
@@ -22,14 +17,14 @@ locked in._
 void Purge(bool tx=true, bool rx=true) throw(SystemException);
 ```
 
-| Parameter | Type   | Default | Description
-| --------- | ------ | ------- | ----------------------------------
-| `tx`      | `bool` | true    | Whether to purge the transmit data
-| `rx`      | `bool` | true    | Whether to purge the receive data
+| Parameter | Type | Default | Description |
+| --------- | ---- | ------- | ----------- |
+| `tx` | `bool` | `true` | Whether to purge the transmit data |
+| `rx` | `bool` | `true` | Whether to purge the receive data |
 
-| Exception          | Base Exception    | Cause
-| ------------------ | ----------------- | ---------------------------------
-| `TimeoutException` | `SystemException` | Command timed out (missing clock)
+| Exception | Base Exception | Cause |
+| --------- | -------------- | ----- |
+| `TimeoutException` | `SystemException` | Command timed out (missing clock) |
 
 ###### Examples
 Purge both the transmit and receive data.
@@ -58,5 +53,5 @@ p.Purge(false, true);
 
 
 ### Additional Resources
-- Complete example: [`examples\purge.cpp`](https://github.com/commtech/cppfscc/blob/master/examples/purge.cpp)
-- Implemenation details: [`src\fscc.cpp`](https://github.com/commtech/cppfscc/blob/master/src/fscc.cpp)
+- Complete example: [`examples/purge.cpp`](../examples/purge.cpp)
+- Implementation details: [`src/fscc.cpp`](../src/fscc.cpp)

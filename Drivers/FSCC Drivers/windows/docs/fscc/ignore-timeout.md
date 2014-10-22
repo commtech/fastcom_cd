@@ -1,9 +1,11 @@
 # Ignore Timeout
 
+When this is enabled, the card will ignore the timeouts for different things. This can be useful when setting a very low clock frequency or when attempting to purge with a slower baud rate, as an example.
+
 ###### Support
-| Code           | Version
-| -------------- | --------
-| `fscc-windows` | `v2.0.0` 
+| Code | Version |
+| ---- | ------- |
+| fscc-windows | 2.0.0  |
 
 
 ## Get
@@ -18,9 +20,9 @@ FSCC_GET_IGNORE_TIMEOUT
 
 unsigned status;
 
-DeviceIoControl(h, FSCC_GET_IGNORE_TIMEOUT, 
-                NULL, 0, 
-                &status, sizeof(status), 
+DeviceIoControl(h, FSCC_GET_IGNORE_TIMEOUT,
+                NULL, 0,
+                &status, sizeof(status),
                 &temp, NULL);
 ```
 
@@ -35,8 +37,8 @@ FSCC_ENABLE_IGNORE_TIMEOUT
 #include <fscc.h>
 ...
 
-DeviceIoControl(h, FSCC_ENABLE_IGNORE_TIMEOUT, 
-                NULL, 0, 
+DeviceIoControl(h, FSCC_ENABLE_IGNORE_TIMEOUT,
+                NULL, 0,
                 NULL, 0,
                 &temp, NULL);
 ```
@@ -52,12 +54,12 @@ FSCC_DISABLE_IGNORE_TIMEOUT
 #include <fscc.h>
 ...
 
-DeviceIoControl(h, FSCC_DISABLE_IGNORE_TIMEOUT, 
-                NULL, 0, 
+DeviceIoControl(h, FSCC_DISABLE_IGNORE_TIMEOUT,
+                NULL, 0,
                 NULL, 0,
                 &temp, NULL);
 ```
 
 
 ### Additional Resources
-- Complete example: [`examples\ignore-timeout.c`](https://github.com/commtech/fscc-windows/blob/master/examples/ignore-timeout.c)
+- Complete example: [`examples/ignore-timeout.c`](../examples/ignore-timeout.c)

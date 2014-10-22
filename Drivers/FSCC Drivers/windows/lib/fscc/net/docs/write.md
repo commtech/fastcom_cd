@@ -1,12 +1,11 @@
 # Write
 
-
 ###### Support
-| Code           | Version
-| -------------- | --------
-| `fscc-windows` | `v2.0.0` 
-| `fscc-linux`   | `v2.0.0` 
-| `netfscc`      | `v1.0.0`
+| Code  | Version |
+| ----- | ------- |
+| fscc-windows | 2.0.0 |
+| fscc-linux | 2.0.0 |
+| netfscc | 1.0.0 |
 
 
 ## Write
@@ -14,17 +13,17 @@
 int Write(byte[] buf, uint size, out NativeOverlapped o);
 ```
 
-| Parameter    | Type                   | Description
-| ------------ | ---------------------- | -----------------------
-| `buf`        | `byte[]`               | The data buffer to transmit
-| `size`       | `uint`                 | The number of bytes to transmit
-| `o`          | `out NativeOverlapped` | [Overlapped IO structure](http://msdn.microsoft.com/en-us/library/windows/desktop/ms686358.aspx)
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `buf` | `byte[]` | The data buffer to transmit |
+| `size` | `uint` | The number of bytes to transmit |
+| `o` | `out NativeOverlapped` | [Overlapped IO structure](http://msdn.microsoft.com/en-us/library/windows/desktop/ms686358.aspx) |
 
-| Exception                 | Base Exception    | Cause
-| ------------------------- | ----------------- | --------------------------------------------------
-| `BufferTooSmallException` | `SystemException` | The write size exceeds the output memory usage cap
-| `TimeoutException`        | `SystemException` | Command timed out (missing clock)
-| `IncorrectModeException`  | `SystemException` | Using the synchronous port while in asynchronous mode
+| Exception | Base Exception | Cause |
+| --------- | -------------- | ----- |
+| `BufferTooSmallException` | `SystemException` | The write size exceeds the output memory usage cap |
+| `TimeoutException` | `SystemException` | Command timed out (missing clock) |
+| `IncorrectModeException` | `SystemException` | Using the synchronous port while in asynchronous mode |
 
 
 ###### Examples
@@ -43,20 +42,20 @@ bytes_written = p.Write(odata, odata.Length, o);
 uint Write(byte[] buf, uint size);
 ```
 
-| Parameter    | Type             | Description
-| ------------ | ---------------- | -----------------------
-| `buf`        | `byte[]`               | The data buffer to transmit
-| `size`       | `uint`                 | The number of bytes to transmit
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `buf` | `byte[]` | The data buffer to transmit |
+| `size` | `uint` | The number of bytes to transmit |
 
-| Return
-| ---------------------------
-| Number of bytes transmitted
+| Return |
+| ------ |
+| Number of bytes transmitted |
 
-| Exception                 | Base Exception    | Cause
-| ------------------------- | ----------------- | --------------------------------------------------
-| `BufferTooSmallException` | `SystemException` | The write size exceeds the output memory usage cap
-| `TimeoutException`        | `SystemException` | Command timed out (missing clock)
-| `IncorrectModeException`  | `SystemException` | Using the synchronous port while in asynchronous mode
+| Exception | Base Exception | Cause |
+| --------- | -------------- | ----- |
+| `BufferTooSmallException` | `SystemException` | The write size exceeds the output memory usage cap |
+| `TimeoutException` | `SystemException` | Command timed out (missing clock) |
+| `IncorrectModeException` | `SystemException` | Using the synchronous port while in asynchronous mode |
 
 ###### Examples
 ```c#
@@ -74,19 +73,19 @@ bytes_written = p.Write(odata, odata.Length);
 uint Write(string str);
 ```
 
-| Parameter | Type     | Description
-| --------- | -------- | -----------------------
-| `str`     | `string` | The string to transmit
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `str` | `string` | The string to transmit |
 
-| Return
-| ---------------------------
-| Number of bytes transmitted
+| Return |
+| ------ |
+| Number of bytes transmitted |
 
-| Exception                 | Base Exception    | Cause
-| ------------------------- | ----------------- | --------------------------------------------------
-| `BufferTooSmallException` | `SystemException` | The write size exceeds the output memory usage cap
-| `TimeoutException`        | `SystemException` | Command timed out (missing clock)
-| `IncorrectModeException`  | `SystemException` | Using the synchronous port while in asynchronous mode
+| Exception | Base Exception | Cause |
+| --------- | -------------- | ----- |
+| `BufferTooSmallException` | `SystemException` | The write size exceeds the output memory usage cap |
+| `TimeoutException` | `SystemException` | Command timed out (missing clock) |
+| `IncorrectModeException` | `SystemException` | Using the synchronous port while in asynchronous mode |
 
 ###### Examples
 ```c#
@@ -101,5 +100,5 @@ bytes_written = p.Write(odata);
 
 
 ### Additional Resources
-- Complete example: [`examples\tutorial.cs`](https://github.com/commtech/netfscc/blob/master/examples/tutorial.cs)
-- Implemenation details: [`src\Fscc.cs`](https://github.com/commtech/netfscc/blob/master/src/Fscc.cs)
+- Complete example: [`examples/tutorial.cs`](../examples/tutorial.cs)
+- Implementation details: [`src/Fscc.cs`](../src/Fscc.cs)

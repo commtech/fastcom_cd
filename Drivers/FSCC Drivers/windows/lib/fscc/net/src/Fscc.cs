@@ -29,60 +29,58 @@ namespace Fscc
     public enum TxModifiers { XF = 0, XREP = 1, TXT = 2, TXEXT = 4 };
     enum ErrorTypes { FSCC_TIMEOUT=16000, FSCC_INCORRECT_MODE, FSCC_BUFFER_TOO_SMALL, FSCC_PORT_NOT_FOUND, FSCC_INVALID_ACCESS, FSCC_INVALID_PARAMETER };
 
+    [SerializableAttribute]
     public class PortNotFoundException : FileNotFoundException
     {
         public PortNotFoundException(uint port_num) : base(string.Format("Port {0} not found", port_num)) {}
     }
 
+    [SerializableAttribute]
     public class InvalidAccessException : UnauthorizedAccessException
     {
         public InvalidAccessException() : base("Invalid access") {}
     }
 
+    [SerializableAttribute]
     public class TimeoutException : SystemException
     {
         public TimeoutException() : base("Command timed out (missing clock)") {}
     }
 
+    [SerializableAttribute]
     public class BufferTooSmallException : SystemException
     {
         public BufferTooSmallException() : base("Buffer too small") {}
     }
 
+    [SerializableAttribute]
     public class IncorrectModeException : SystemException
     {
         public IncorrectModeException() : base("Incorrect mode") {}
     }
 
+    [SerializableAttribute]
     public class InvalidParameterException : ArgumentException
     {
         public InvalidParameterException() : base("Invalid parameter") {}
     }
 
-    public class Port
+    public class Port : IDisposable
     {
-#if DEBUG
-        public const string DLL_PATH = "cfsccd.dll";
-#else
-        public const string DLL_PATH = "cfscc.dll";
-#endif
-
         IntPtr _handle;
         uint _port_num;
         Registers _registers;
         MemoryCap _memcap;
+        bool _disposed = false;
 
         public override string ToString()
         {
             return String.Format("FSCC{0}", _port_num);
         }
 
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_connect(uint port_num, out IntPtr h);
-
         public Port(uint port_num)
         {
-            int e = fscc_connect(port_num, out this._handle);
+            int e = NativeMethods.fscc_connect(port_num, out this._handle);
 
             switch (e) {
             case 0:
@@ -103,159 +101,128 @@ namespace Fscc
             this._memcap = new MemoryCap(this._handle);
         }
 
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_disconnect(IntPtr h);
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if(!_disposed)
+            {
+                NativeMethods.fscc_disconnect(_handle);
+
+                _handle = IntPtr.Zero;
+                _disposed = true;
+            }
+        }
 
         ~Port()
         {
-            fscc_disconnect(this._handle);
+            Dispose(false);
         }
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_set_tx_modifiers(IntPtr h, uint modifiers);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_get_tx_modifiers(IntPtr h, out uint modifiers);
 
         public TxModifiers TxModifiers
         {
             set
             {
-                fscc_set_tx_modifiers(this._handle, (uint)value);
+                NativeMethods.fscc_set_tx_modifiers(this._handle, (uint)value);
             }
 
             get
             {
                 uint modifiers;
 
-                fscc_get_tx_modifiers(this._handle, out modifiers);
+                NativeMethods.fscc_get_tx_modifiers(this._handle, out modifiers);
 
                 return (TxModifiers)modifiers;
             }
         }
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_enable_append_status(IntPtr h);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_disable_append_status(IntPtr h);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_get_append_status(IntPtr h, out bool status);
 
         public bool AppendStatus
         {
             set
             {
                 if (value == true)
-                    fscc_enable_append_status(this._handle);
+                    NativeMethods.fscc_enable_append_status(this._handle);
                 else
-                    fscc_disable_append_status(this._handle);
+                    NativeMethods.fscc_disable_append_status(this._handle);
             }
 
             get
             {
                 bool status;
 
-                fscc_get_append_status(this._handle, out status);
+                NativeMethods.fscc_get_append_status(this._handle, out status);
 
                 return status;
             }
         }
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_enable_append_timestamp(IntPtr h);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_disable_append_timestamp(IntPtr h);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_get_append_timestamp(IntPtr h, out bool timestamp);
 
         public bool AppendTimestamp
         {
             set
             {
                 if (value == true)
-                    fscc_enable_append_timestamp(this._handle);
+                    NativeMethods.fscc_enable_append_timestamp(this._handle);
                 else
-                    fscc_disable_append_timestamp(this._handle);
+                    NativeMethods.fscc_disable_append_timestamp(this._handle);
             }
 
             get
             {
                 bool timestamp;
 
-                fscc_get_append_timestamp(this._handle, out timestamp);
+                NativeMethods.fscc_get_append_timestamp(this._handle, out timestamp);
 
                 return timestamp;
             }
         }
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_enable_ignore_timeout(IntPtr h);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_disable_ignore_timeout(IntPtr h);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_get_ignore_timeout(IntPtr h, out bool status);
 
         public bool IgnoreTimeout
         {
             set
             {
                 if (value == true)
-                    fscc_enable_ignore_timeout(this._handle);
+                    NativeMethods.fscc_enable_ignore_timeout(this._handle);
                 else
-                    fscc_disable_ignore_timeout(this._handle);
+                    NativeMethods.fscc_disable_ignore_timeout(this._handle);
             }
 
             get
             {
                 bool status;
 
-                fscc_get_ignore_timeout(this._handle, out status);
+                NativeMethods.fscc_get_ignore_timeout(this._handle, out status);
 
                 return status;
             }
         }
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_enable_rx_multiple(IntPtr h);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_disable_rx_multiple(IntPtr h);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_get_rx_multiple(IntPtr h, out bool status);
 
         public bool RxMultiple
         {
             set
             {
                 if (value == true)
-                    fscc_enable_rx_multiple(this._handle);
+                    NativeMethods.fscc_enable_rx_multiple(this._handle);
                 else
-                    fscc_disable_rx_multiple(this._handle);
+                    NativeMethods.fscc_disable_rx_multiple(this._handle);
             }
 
             get
             {
                 bool status;
 
-                fscc_get_rx_multiple(this._handle, out status);
+                NativeMethods.fscc_get_rx_multiple(this._handle, out status);
 
                 return status;
             }
         }
 
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_purge(IntPtr h, bool tx, bool rx);
-
         public void Purge(bool tx, bool rx)
         {
-            int e = fscc_purge(this._handle, tx, rx);
+            int e = NativeMethods.fscc_purge(this._handle, tx, rx);
 
             switch (e) {
             case 0:
@@ -274,14 +241,11 @@ namespace Fscc
             Purge(true, true);
         }
 
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_set_clock_frequency(IntPtr h, uint frequency);
-
         public uint ClockFrequency
         {
             set
             {
-                int e = fscc_set_clock_frequency(this._handle, value);
+                int e = NativeMethods.fscc_set_clock_frequency(this._handle, value);
 
                 switch (e) {
                 case 0:
@@ -296,18 +260,9 @@ namespace Fscc
             }
         }
 
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_track_interrupts(IntPtr h, uint interrupts, out uint matches, out NativeOverlapped overlapped);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_track_interrupts_with_blocking(IntPtr h, uint interrupts, out uint matches);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_track_interrupts_with_timeout(IntPtr h, uint interrupts, out uint matches, uint timeout);
-
         public int TrackInterrupts(uint interrupts, out uint matches, out NativeOverlapped o)
         {
-            int e = fscc_track_interrupts(this._handle, interrupts, out matches, out o);
+            int e = NativeMethods.fscc_track_interrupts(this._handle, interrupts, out matches, out o);
 
             switch (e) {
             case 0:
@@ -325,7 +280,7 @@ namespace Fscc
         {
             uint matches;
 
-            int e = fscc_track_interrupts_with_blocking(this._handle, interrupts, out matches);
+            int e = NativeMethods.fscc_track_interrupts_with_blocking(this._handle, interrupts, out matches);
 
             if (e != 0)
                 throw new SystemException(e.ToString());
@@ -337,7 +292,7 @@ namespace Fscc
         {
             uint matches;
 
-            int e = fscc_track_interrupts_with_timeout(this._handle, interrupts, out matches, timeout);
+            int e = NativeMethods.fscc_track_interrupts_with_timeout(this._handle, interrupts, out matches, timeout);
 
             if (e != 0)
                 throw new SystemException(e.ToString());
@@ -345,25 +300,11 @@ namespace Fscc
             return matches;
         }
 
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_write(IntPtr h, byte[] buf, uint size, out uint bytes_written, out NativeOverlapped overlapped);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_write_with_blocking(IntPtr h, byte[] buf, uint size, out uint bytes_written);
-
-        [DllImport("kernel32.dll", SetLastError=true)]
-        public static extern bool GetOverlappedResult(
-            IntPtr hDevice,
-            out NativeOverlapped lpOverlapped,
-            out uint lpNumberOfBytesTransferred,
-            bool bWait
-        );
-
         public int Write(byte[] buf, uint size, out NativeOverlapped o)
         {
             uint bytes_written;
 
-            int e = fscc_write(this._handle, buf, size, out bytes_written, out o);
+            int e = NativeMethods.fscc_write(this._handle, buf, size, out bytes_written, out o);
 
             switch (e) {
             case 0:
@@ -390,7 +331,7 @@ namespace Fscc
         {
             uint bytes_written;
 
-            int e = fscc_write_with_blocking(this._handle, buf, size, out bytes_written);
+            int e = NativeMethods.fscc_write_with_blocking(this._handle, buf, size, out bytes_written);
 
             switch (e) {
             case 0:
@@ -417,18 +358,9 @@ namespace Fscc
             return Write(Encoding.ASCII.GetBytes(str), (uint)str.Length);
         }
 
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_read(IntPtr h, byte[] buf, uint size, out uint bytes_read, out NativeOverlapped overlapped);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_read_with_blocking(IntPtr h, byte[] buf, uint size, out uint bytes_read);
-
-        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_read_with_timeout(IntPtr h, byte[] buf, uint size, out uint bytes_read, uint timeout);
-
         public int Read(byte[] buf, uint size, out uint bytes_read, out NativeOverlapped o)
         {
-            int e = fscc_read(this._handle, buf, size, out bytes_read, out o);
+            int e = NativeMethods.fscc_read(this._handle, buf, size, out bytes_read, out o);
 
             switch (e) {
             case 0:
@@ -452,7 +384,7 @@ namespace Fscc
         {
             uint bytes_read;
 
-            int e = fscc_read_with_blocking(this._handle, buf, size, out bytes_read);
+            int e = NativeMethods.fscc_read_with_blocking(this._handle, buf, size, out bytes_read);
 
             switch (e) {
             case 0:
@@ -475,7 +407,7 @@ namespace Fscc
         {
             uint bytes_read;
 
-            int e = fscc_read_with_timeout(this._handle, buf, size, out bytes_read, timeout);
+            int e = NativeMethods.fscc_read_with_timeout(this._handle, buf, size, out bytes_read, timeout);
 
             switch (e) {
             case 0:
@@ -634,18 +566,13 @@ namespace Fscc
             this._handle = h;
         }
 
-        [DllImport(Port.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_set_registers(IntPtr h, IntPtr registers);
-
-        [DllImport(Port.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_get_registers(IntPtr h, IntPtr registers);
-
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands")]
         private _Registers GetRegisters(_Registers r)
         {
             IntPtr buffer = Marshal.AllocHGlobal(Marshal.SizeOf(r));
             Marshal.StructureToPtr(r, buffer, false);
 
-            fscc_get_registers(this._handle, buffer);
+            NativeMethods.fscc_get_registers(this._handle, buffer);
 
             r = (_Registers)Marshal.PtrToStructure(buffer, typeof(_Registers));
             Marshal.FreeHGlobal(buffer);
@@ -653,12 +580,13 @@ namespace Fscc
             return r;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands")]
         private void SetRegisters(_Registers r)
         {
             IntPtr buffer = Marshal.AllocHGlobal(Marshal.SizeOf(r));
             Marshal.StructureToPtr(r, buffer, false);
 
-            int e = fscc_set_registers(this._handle, buffer);
+            int e = NativeMethods.fscc_set_registers(this._handle, buffer);
 
             Marshal.FreeHGlobal(buffer);
 
@@ -1068,18 +996,13 @@ namespace Fscc
             this._handle = h;
         }
 
-        [DllImport(Port.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_set_memory_cap(IntPtr h, IntPtr memcap);
-
-        [DllImport(Port.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int fscc_get_memory_cap(IntPtr h, IntPtr memcap);
-
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands")]
         private _MemoryCap GetMemoryCap(_MemoryCap m)
         {
             IntPtr buffer = Marshal.AllocHGlobal(Marshal.SizeOf(m));
             Marshal.StructureToPtr(m, buffer, false);
 
-            fscc_get_memory_cap(this._handle, buffer);
+            NativeMethods.fscc_get_memory_cap(this._handle, buffer);
 
             m = (_MemoryCap)Marshal.PtrToStructure(buffer, typeof(_MemoryCap));
             Marshal.FreeHGlobal(buffer);
@@ -1087,12 +1010,13 @@ namespace Fscc
             return m;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands")]
         private void SetMemoryCap(_MemoryCap m)
         {
             IntPtr buffer = Marshal.AllocHGlobal(Marshal.SizeOf(m));
             Marshal.StructureToPtr(m, buffer, false);
 
-            fscc_set_memory_cap(this._handle, buffer);
+            NativeMethods.fscc_set_memory_cap(this._handle, buffer);
 
             Marshal.FreeHGlobal(buffer);
         }
@@ -1134,5 +1058,112 @@ namespace Fscc
                 return (uint)GetMemoryCap(m).output;
             }
         }
+    }
+
+    internal static class NativeMethods
+    {
+#if DEBUG
+        public const string DLL_PATH = "cfsccd.dll";
+#else
+        public const string DLL_PATH = "cfscc.dll";
+#endif
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_connect(uint port_num, out IntPtr h);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_disconnect(IntPtr h);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_set_tx_modifiers(IntPtr h, uint modifiers);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_get_tx_modifiers(IntPtr h, out uint modifiers);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_enable_append_status(IntPtr h);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_disable_append_status(IntPtr h);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_get_append_status(IntPtr h, out bool status);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_enable_append_timestamp(IntPtr h);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_disable_append_timestamp(IntPtr h);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_get_append_timestamp(IntPtr h, out bool timestamp);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_enable_ignore_timeout(IntPtr h);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_disable_ignore_timeout(IntPtr h);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_get_ignore_timeout(IntPtr h, out bool status);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_enable_rx_multiple(IntPtr h);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_disable_rx_multiple(IntPtr h);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_get_rx_multiple(IntPtr h, out bool status);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_purge(IntPtr h, bool tx, bool rx);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_set_clock_frequency(IntPtr h, uint frequency);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_track_interrupts(IntPtr h, uint interrupts, out uint matches, out NativeOverlapped overlapped);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_track_interrupts_with_blocking(IntPtr h, uint interrupts, out uint matches);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_track_interrupts_with_timeout(IntPtr h, uint interrupts, out uint matches, uint timeout);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_write(IntPtr h, byte[] buf, uint size, out uint bytes_written, out NativeOverlapped overlapped);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_write_with_blocking(IntPtr h, byte[] buf, uint size, out uint bytes_written);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern bool GetOverlappedResult(
+            IntPtr hDevice,
+            out NativeOverlapped lpOverlapped,
+            out uint lpNumberOfBytesTransferred,
+            bool bWait
+        );
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_read(IntPtr h, byte[] buf, uint size, out uint bytes_read, out NativeOverlapped overlapped);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_read_with_blocking(IntPtr h, byte[] buf, uint size, out uint bytes_read);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_read_with_timeout(IntPtr h, byte[] buf, uint size, out uint bytes_read, uint timeout);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_set_registers(IntPtr h, IntPtr registers);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_get_registers(IntPtr h, IntPtr registers);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_set_memory_cap(IntPtr h, IntPtr memcap);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int fscc_get_memory_cap(IntPtr h, IntPtr memcap);
     }
 }

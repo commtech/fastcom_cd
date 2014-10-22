@@ -1,1079 +1,498 @@
-/*! \file */ 
+/*
+    Copyright (C) 2013 Commtech, Inc.
+
+    This file is part of cserialfc.
+
+    cserialfc is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    cserialfc is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with cserialfc.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
 #include <stdio.h>
+#include <fcntl.h> /* open, O_RDWR */
+
+#ifndef _WIN32
+#include <unistd.h> /* write, close */
+#include <poll.h>
+#endif
 
 #include "serialfc.h"
+#include "errno.h"
+
+#define UNUSED(x) (void)(x)
 
 #define MAX_NAME_LENGTH 25
 
-/******************************************************************************/
-/*!
-
-  \brief Opens a handle to a SerialFC port.
-
-  \param[in] port_num 
-    the SerialFC port number
-  \param[in] overlapped 
-    whether you would like to use the port in overlapped mode
-  \param[out] h 
-    user variable that the port's HANDLE will be assigned to
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-
-  \note
-    If using an FSCC device this handle will only give you access to the 
-	asynchronous functionality of the card. You will need to use the FSCC ports	
-	if you would like to use the synchronous functionality.
-
-*/
-/******************************************************************************/
-int serialfc_connect(unsigned port_num, BOOL overlapped, HANDLE *h)
+int translate_error(int e)
 {
-  char name[MAX_NAME_LENGTH];
-  DWORD flags_and_attributes = FILE_ATTRIBUTE_NORMAL;
-
-  sprintf_s(name, MAX_NAME_LENGTH, "\\\\.\\COM%u", port_num);
-        
-  if (overlapped)
-  	flags_and_attributes |= FILE_FLAG_OVERLAPPED;
-
-  *h = CreateFile(name,
-  		GENERIC_READ | GENERIC_WRITE,
-  		FILE_SHARE_READ | FILE_SHARE_WRITE,
-  		NULL,
-  		OPEN_EXISTING,
-  		flags_and_attributes,
-  		NULL
-  );
-
-  return (*h != INVALID_HANDLE_VALUE) ? ERROR_SUCCESS : GetLastError();
+#ifdef _WIN32
+    switch (e) {
+        case ERROR_ACCESS_DENIED:
+            return SERIALFC_INVALID_ACCESS;
+        case ERROR_FILE_NOT_FOUND:
+            return SERIALFC_PORT_NOT_FOUND;
+        case ERROR_NOT_SUPPORTED:
+            return SERIALFC_NOT_SUPPORTED;
+        case ERROR_INVALID_PARAMETER:
+            return SERIALFC_INVALID_PARAMETER;
+    default:
+        return e;
+    }
+#else
+    switch (e) {
+        case ENOENT:
+            return SERIALFC_PORT_NOT_FOUND;
+        case EACCES:
+            return SERIALFC_INVALID_ACCESS;
+        case EPROTONOSUPPORT:
+            return SERIALFC_NOT_SUPPORTED;
+        case EINVAL:
+            return SERIALFC_INVALID_PARAMETER;
+    default:
+        return e;
+    }
+#endif
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Puts the port into RS485 mode
-
-  \param[in] h 
-    HANDLE to the port
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-
-*/
-/******************************************************************************/
-int serialfc_enable_rs485(HANDLE h)
+int ioctl_action(serialfc_handle h, int ioctl_name)
 {
-  DWORD temp;
-  BOOL result;
+    int result;
 
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_ENABLE_RS485, 
-                           NULL, 0, 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
+#ifdef _WIN32
+    DWORD temp;
 
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    result = DeviceIoControl(h, (DWORD)ioctl_name,
+                             NULL, 0,
+                             NULL, 0,
+                             &temp, (LPOVERLAPPED)NULL);
+
+    return (result == TRUE) ? 0 : translate_error(GetLastError());
+#else
+    result = ioctl(h, ioctl_name);
+
+    return (result != -1) ? 0 : translate_error(errno);
+#endif
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Takes the port out of RS485 mode
-
-  \param[in] h 
-    HANDLE to the port
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-
-*/
-/******************************************************************************/
-int serialfc_disable_rs485(HANDLE h)
+int ioctl_get_boolean(serialfc_handle h, int ioctl_name, unsigned *status)
 {
-  DWORD temp;
-  BOOL result;
+    int result;
 
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_DISABLE_RS485, 
-                           NULL, 0, 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
+#ifdef _WIN32
+    DWORD temp;
 
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    result = DeviceIoControl(h, (DWORD)ioctl_name,
+                             NULL, 0,
+                             status, sizeof(*status),
+                             &temp, (LPOVERLAPPED)NULL);
+
+    return (result == TRUE) ? 0 : translate_error(GetLastError());
+#else
+    result = ioctl(h, ioctl_name, status);
+
+    return (result != -1) ? 0 : translate_error(errno);
+#endif
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Gets whether the port is in RS485 mode
-
-  \param[in] h 
-    HANDLE to the port
-  \param[out] status 
-    whether the port is in rs485 mode
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-
-  \todo
-    This isn't currently supported in any of the cards. It will be added in a
-	future release.
-
-*/
-/******************************************************************************/
-int serialfc_get_rs485(HANDLE h, BOOL *status)
+int ioctl_set_integer(serialfc_handle h, int ioctl_name, int value)
 {
-  DWORD temp;
-  BOOL result;
+    int result;
 
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_GET_RS485, 
-                           NULL, 0, 
-                           status, sizeof(*status), 
-                           &temp, (LPOVERLAPPED)NULL);
+#ifdef _WIN32
+    DWORD temp;
 
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    result = DeviceIoControl(h, (DWORD)ioctl_name,
+                             &value, sizeof(value),
+                             NULL, 0,
+                             &temp, (LPOVERLAPPED)NULL);
+
+    return (result == TRUE) ? 0 : translate_error(GetLastError());
+#else
+    result = ioctl(h, ioctl_name, value);
+
+    return (result != -1) ? 0 : translate_error(errno);
+#endif
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Turns on echo cancellation for the port
-
-  \param[in] h 
-    HANDLE to the port
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-
-*/
-/******************************************************************************/
-int serialfc_enable_echo_cancel(HANDLE h)
+int ioctl_get_integer(serialfc_handle h, int ioctl_name, int *value)
 {
-  DWORD temp;
-  BOOL result;
+    int result;
 
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_ENABLE_ECHO_CANCEL, 
-                           NULL, 0, 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
+#ifdef _WIN32
+    DWORD temp;
 
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    result = DeviceIoControl(h, (DWORD)ioctl_name,
+                             NULL, 0,
+                             value, sizeof(*value),
+                             &temp, (LPOVERLAPPED)NULL);
+
+    return (result == TRUE) ? 0 : translate_error(GetLastError());
+#else
+    result = ioctl(h, ioctl_name, value);
+
+    return (result != -1) ? 0 : translate_error(errno);
+#endif
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Turns off echo cancellation for the port
-
-  \param[in] h 
-    HANDLE to the port
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-
-*/
-/******************************************************************************/
-int serialfc_disable_echo_cancel(HANDLE h)
+int ioctl_set_pointer(serialfc_handle h, int ioctl_name, const void *value,
+                      int size)
 {
-  DWORD temp;
-  BOOL result;
+    int result;
 
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_DISABLE_ECHO_CANCEL, 
-                           NULL, 0, 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
+    #ifdef _WIN32
+        DWORD temp;
 
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+        result = DeviceIoControl(h, (DWORD)ioctl_name,
+                                 (void *)value, size,
+                                 NULL, 0,
+                                 &temp, (LPOVERLAPPED)NULL);
+
+        return (result == TRUE) ? 0 : translate_error(GetLastError());
+    #else
+        UNUSED(size);
+
+        result = ioctl(h, ioctl_name, value);
+
+        return (result != -1) ? 0 : translate_error(errno);
+    #endif
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Gets whether the port has echo cancel enabled
-
-  \param[in] h 
-    HANDLE to the port
-  \param[out] status 
-    whether the port has echo cancel enabled
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-
-*/
-/******************************************************************************/
-int serialfc_get_echo_cancel(HANDLE h, BOOL *status)
+int ioctl_get_pointer(serialfc_handle h, int ioctl_name, void *value,
+                      int size)
 {
-  DWORD temp;
-  BOOL result;
+    int result;
 
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_GET_ECHO_CANCEL, 
-                           NULL, 0, 
-                           status, sizeof(*status), 
-                           &temp, (LPOVERLAPPED)NULL);
+#ifdef _WIN32
+    DWORD temp;
 
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    result = DeviceIoControl(h, (DWORD)ioctl_name,
+                             NULL, 0,
+                             value, size,
+                             &temp, (LPOVERLAPPED)NULL);
+
+    return (result == TRUE) ? 0 : translate_error(GetLastError());
+#else
+    UNUSED(size);
+
+    result = ioctl(h, ioctl_name, value);
+
+    return (result != -1) ? 0 : translate_error(errno);
+#endif
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Turns on software termination for the port
-
-  \param[in] h 
-    HANDLE to the port
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-	
-  \note
-    Only supported in the Async-PCIe cards
-
-*/
-/******************************************************************************/
-int serialfc_enable_termination(HANDLE h)
+int ioctl_getset_pointer(serialfc_handle h, int ioctl_name, void *value,
+                         int size)
 {
-  DWORD temp;
-  BOOL result;
+    int result;
 
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_ENABLE_TERMINATION, 
-                           NULL, 0, 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
+#ifdef _WIN32
+    DWORD temp;
 
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    result = DeviceIoControl(h, (DWORD)ioctl_name,
+                             value, size,
+                             value, size,
+                             &temp, (LPOVERLAPPED)NULL);
+
+    return (result == TRUE) ? 0 : translate_error(GetLastError());
+#else
+    UNUSED(size);
+
+    result = ioctl(h, ioctl_name, value);
+
+    return (result != -1) ? 0 : translate_error(errno);
+#endif
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Turns off software termination for the port
-
-  \param[in] h 
-    HANDLE to the port
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-	
-  \note
-    Only supported in the Async-PCIe cards
-
-*/
-/******************************************************************************/
-int serialfc_disable_termination(HANDLE h)
+int serialfc_connect(unsigned port_num, serialfc_handle *h)
 {
-  DWORD temp;
-  BOOL result;
+    char name[MAX_NAME_LENGTH];
 
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_DISABLE_TERMINATION, 
-                           NULL, 0, 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
+#ifdef _WIN32
+    sprintf_s(name, MAX_NAME_LENGTH, "\\\\.\\COM%u", port_num);
 
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    *h = CreateFile(name,
+            GENERIC_READ | GENERIC_WRITE,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            NULL,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
+            NULL
+    );
+
+    return (*h != INVALID_HANDLE_VALUE) ? 0 : translate_error(GetLastError());
+#else
+    sprintf(name, "/dev/serialfc%u", port_num);
+
+    *h = open(name, O_RDWR);
+
+    return (*h != -1) ? 0 : translate_error(errno);
+#endif
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Gets whether the port is software terminated
-
-  \param[in] h 
-    HANDLE to the port
-  \param[out] status 
-    whether the port is software terminated
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-	
-  \note
-    Only supported in the Async-PCIe cards
-
-*/
-/******************************************************************************/
-int serialfc_get_termination(HANDLE h, BOOL *status)
+int serialfc_enable_rs485(serialfc_handle h)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_GET_TERMINATION, 
-                           NULL, 0, 
-                           status, sizeof(*status), 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_action(h, IOCTL_FASTCOM_ENABLE_RS485);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Sets the port's sample rate
-
-  \param[in] h 
-    HANDLE to the port
-  \param[in] rate 
-    The sample rate
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-	
-  \note
-    Each card family has it's own supported values.
-	
-    - FSCC Family (16c950): 4 - 16
-    - Async-335 Family (17D15X): 8, 16
-    - Async-PCIe Family (17V35X): 4, 8, 16
-
-*/
-/******************************************************************************/
-int serialfc_set_sample_rate(HANDLE h, unsigned rate)
+int serialfc_disable_rs485(serialfc_handle h)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_SET_SAMPLE_RATE, 
-                           &rate, sizeof(rate), 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_action(h, IOCTL_FASTCOM_DISABLE_RS485);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Gets the port's sample rate
-
-  \param[in] h 
-    HANDLE to the port
-  \param[out] rate 
-    the port's sample rate
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-
-*/
-/******************************************************************************/
-int serialfc_get_sample_rate(HANDLE h, unsigned *rate)
+int serialfc_get_rs485(serialfc_handle h, unsigned *status)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_GET_SAMPLE_RATE, 
-                           NULL, 0, 
-                           rate, sizeof(*rate), 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_get_boolean(h, IOCTL_FASTCOM_GET_RS485, status);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Sets the port's transmit trigger level
-
-  \param[in] h 
-    HANDLE to the port
-  \param[in] level 
-    The trigger level
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-	
-  \note
-    Each family of cards has it's own supported range.
-	
-    - FSCC Family: 0 - 127
-    - Async-335 Family (17D15X): 0 - 64
-    - Async-PCIe Family (17V35X): 0 - 255
-
-*/
-/******************************************************************************/
-int serialfc_set_tx_trigger(HANDLE h, unsigned level)
+int serialfc_enable_echo_cancel(serialfc_handle h)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_SET_TX_TRIGGER, 
-                           &level, sizeof(level), 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_action(h, IOCTL_FASTCOM_ENABLE_ECHO_CANCEL);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Gets the ports transmit trigger level
-
-  \param[in] h 
-    HANDLE to the port
-  \param[out] level 
-    the port's transmit trigger level
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-
-*/
-/******************************************************************************/
-int serialfc_get_tx_trigger(HANDLE h, unsigned *level)
+int serialfc_disable_echo_cancel(serialfc_handle h)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_GET_TX_TRIGGER, 
-                           NULL, 0, 
-                           level, sizeof(*level), 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_action(h, IOCTL_FASTCOM_DISABLE_ECHO_CANCEL);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Sets the port's receive trigger level
-
-  \param[in] h 
-    HANDLE to the port
-  \param[in] level 
-    The receive level
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-	
-  \note
-    Each card has it's own supported range.
-	
-    - FSCC Family (16c950): 0 - 127
-    - Async-335 Family (17D15X): 0 - 64
-    - Async-PCIe Family (17V35X): 0 - 255
-
-*/
-/******************************************************************************/
-int serialfc_set_rx_trigger(HANDLE h, unsigned level)
+int serialfc_get_echo_cancel(serialfc_handle h, unsigned *status)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_SET_RX_TRIGGER, 
-                           &level, sizeof(level), 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_get_boolean(h, IOCTL_FASTCOM_GET_ECHO_CANCEL, status);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Gets the ports receive trigger level
-
-  \param[in] h 
-    HANDLE to the port
-  \param[out] level 
-    the port's receive trigger level
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-
-  \todo
-    This is only supported in the FSCC cards but isn't currently implemented.
-
-*/
-/******************************************************************************/
-int serialfc_get_rx_trigger(HANDLE h, unsigned *level)
+int serialfc_enable_termination(serialfc_handle h)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_GET_RX_TRIGGER, 
-                           NULL, 0, 
-                           level, sizeof(*level), 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_action(h, IOCTL_FASTCOM_ENABLE_TERMINATION);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Sets the ports clock rate
-
-  \param[in] h 
-    HANDLE to the port
-  \param[out] rate 
-    the port's clock rate
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-	
-  \note
-    This is only supported on the Async-335 and FSCC cards. Each also has it's 
-	own supported range.
-	
-    - FSCC Family (16c950): 200 Hz - 270 MHz
-    - Async-335 Family (17D15X): 6 MHz - 180 MHz
-	
-	The Async-PCIe family doesn't use a variable clock generator to achieve
-	baud rates so this is not required.
-
-*/
-/******************************************************************************/
-int serialfc_set_clock_rate(HANDLE h, unsigned rate)
+int serialfc_disable_termination(serialfc_handle h)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_SET_CLOCK_RATE, 
-                           &rate, sizeof(rate), 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_action(h, IOCTL_FASTCOM_DISABLE_TERMINATION);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Turns on isochronous mode for the port
-
-  \param[in] h 
-    HANDLE to the port
-  \param[in] mode 
-    which isochronous mode
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-	
-  \note
-    This is only supported on the FSCC cards.
-
-  \note
-    If you apply an external clock to the card before turning on isochronous
-    mode your system will freeze due to too many serial interrupts. Make sure 
-    and apply the clock after you are the isochronous mode (so the interrupts 
-    are disabled).
-	
-  \note
-	There are 8 different isochronous combinations you can use.
-	
-	0: Transmit using external RI#
-	1: Transmit using internal BRG
-	2: Receive using external DSR#
-	3: Transmit using external RI#, receive using external DSR#
-	4: Transmit using internal BRG, receive using external DSR#
-	5: Receive using internal BRG
-	6: Transmit using external RI#, receive using internal BRG
-	7: Transmit using internal BRG, receive using internal BRG
-	8: Transmit and receive using external RI#
-	9: Transmit clock is output on DTR#
-   10: Transmit clock is output on DTR#, receive using external DSR#
-
-*/
-/******************************************************************************/
-int serialfc_enable_isochronous(HANDLE h, unsigned mode)
+int serialfc_get_termination(serialfc_handle h, unsigned *status)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_ENABLE_ISOCHRONOUS, 
-                           &mode, sizeof(mode), 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_get_boolean(h, IOCTL_FASTCOM_GET_TERMINATION, status);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Turns off isochronous mode for the port
-
-  \param[in] h 
-    HANDLE to the port
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-	
-  \note
-    This is only supported on the FSCC cards.
-
-  \note
-    If you have an external clock applied to the card while turning off 
-    isochronous mode your system will freeze due to too many serial interrupts. 
-    Make sure and remove the clock before you disable isochronous mode (while 
-    the interrupts are disabled).
-
-*/
-/******************************************************************************/
-int serialfc_disable_isochronous(HANDLE h)
+int serialfc_set_sample_rate(serialfc_handle h, unsigned rate)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_DISABLE_ISOCHRONOUS, 
-                           NULL, 0, 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_set_integer(h, IOCTL_FASTCOM_SET_SAMPLE_RATE, rate);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Gets the port's isochronous mode
-
-  \param[in] h 
-    HANDLE to the port
-  \param[out] mode 
-    the port's isochronous mode
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-	
-  \note
-    This is only supported on the FSCC cards.
-
-*/
-/******************************************************************************/
-int serialfc_get_isochronous(HANDLE h, int *mode)
+int serialfc_get_sample_rate(serialfc_handle h, unsigned *rate)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_GET_ISOCHRONOUS, 
-                           NULL, 0, 
-                           mode, sizeof(*mode), 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_get_integer(h, IOCTL_FASTCOM_GET_SAMPLE_RATE, (int *)rate);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Turns on external transmit mode for the port
-
-  \param[in] h 
-    HANDLE to the port
-  \param[in] num_frames 
-    the number of characters to send on external signal
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-  
-  \note
-    This is only supported on the FSCC cards.
-
-*/
-/******************************************************************************/
-int serialfc_enable_external_transmit(HANDLE h, unsigned num_frames)
+int serialfc_set_tx_trigger(serialfc_handle h, unsigned level)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_ENABLE_EXTERNAL_TRANSMIT, 
-                           &num_frames, sizeof(num_frames), 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_set_integer(h, IOCTL_FASTCOM_SET_TX_TRIGGER, level);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Turns off external transmit mode for the port
-
-  \param[in] h 
-    HANDLE to the port
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-  
-  \note
-    This is only supported on the FSCC cards.
-
-*/
-/******************************************************************************/
-int serialfc_disable_external_transmit(HANDLE h)
+int serialfc_get_tx_trigger(serialfc_handle h, unsigned *level)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_DISABLE_EXTERNAL_TRANSMIT, 
-                           NULL, 0, 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_get_integer(h, IOCTL_FASTCOM_GET_TX_TRIGGER, (int *)level);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Gets the port's external transmit mode
-
-  \param[in] h 
-    HANDLE to the port
-  \param[out] num_frames 
-    the number of characters to send on external signal
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-  
-  \note
-    This is only supported on the FSCC cards.
-
-*/
-/******************************************************************************/
-int serialfc_get_external_transmit(HANDLE h, unsigned *num_frames)
+int serialfc_set_rx_trigger(serialfc_handle h, unsigned level)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_GET_EXTERNAL_TRANSMIT, 
-                           NULL, 0, 
-                           num_frames, sizeof(*num_frames), 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_set_integer(h, IOCTL_FASTCOM_SET_RX_TRIGGER, level);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Sets how many characters are transmitted per frame.
-  
-
-  \param[in] h 
-    HANDLE to the port
-  \param[in] num_chars 
-    the number of characters per frame
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-  
-  \note
-    This is only supported on the FSCC cards.
-
-*/
-/******************************************************************************/
-int serialfc_set_frame_length(HANDLE h, unsigned num_chars)
+int serialfc_get_rx_trigger(serialfc_handle h, unsigned *level)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_SET_FRAME_LENGTH, 
-                           &num_chars, sizeof(num_chars), 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_get_integer(h, IOCTL_FASTCOM_GET_RX_TRIGGER, (int *)level);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Gets the frame length.
-
-  \param[in] h 
-    HANDLE to the port
-  \param[out] num_chars 
-    the number of characters sent per frame
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-  
-  \note
-    This is only supported on the FSCC cards.
-
-*/
-/******************************************************************************/
-int serialfc_get_frame_length(HANDLE h, unsigned *num_chars)
+int serialfc_set_clock_rate(serialfc_handle h, unsigned rate)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_GET_FRAME_LENGTH, 
-                           NULL, 0, 
-                           num_chars, sizeof(*num_chars), 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    //TODO: This needs something different for linux
+    return ioctl_set_integer(h, IOCTL_FASTCOM_SET_CLOCK_RATE, rate);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Puts the port into 9-bit protocol mode
-
-  \param[in] h 
-    HANDLE to the port
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-  
-  \note
-    This is only supported on the FSCC cards.
-
-*/
-/******************************************************************************/
-int serialfc_enable_9bit(HANDLE h)
+int serialfc_enable_isochronous(serialfc_handle h, unsigned mode)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_ENABLE_9BIT, 
-                           NULL, 0, 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_set_integer(h, IOCTL_FASTCOM_ENABLE_ISOCHRONOUS, mode);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Takes the port out of 9-bit protocol
-
-  \param[in] h 
-    HANDLE to the port
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-  
-  \note
-    This is only supported on the FSCC cards.
-
-*/
-/******************************************************************************/
-int serialfc_disable_9bit(HANDLE h)
+int serialfc_disable_isochronous(serialfc_handle h)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_DISABLE_9BIT, 
-                           NULL, 0, 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_action(h, IOCTL_FASTCOM_DISABLE_ISOCHRONOUS);
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Gets whether the port is in 9-bit protocol mode
-
-  \param[in] h 
-    HANDLE to the port
-  \param[out] status 
-    whether the port is in rs485 mode
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-  
-  \note
-    This is only supported on the FSCC cards.
-
-*/
-/******************************************************************************/
-int serialfc_get_9bit(HANDLE h, BOOL *status)
+int serialfc_get_isochronous(serialfc_handle h, int *mode)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_GET_9BIT, 
-                           NULL, 0, 
-                           status, sizeof(*status), 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_get_integer(h, IOCTL_FASTCOM_GET_ISOCHRONOUS, mode);
 }
 
-int serialfc_enable_fixed_baud_rate(HANDLE h, unsigned rate)
+int serialfc_enable_external_transmit(serialfc_handle h, unsigned num_frames)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_ENABLE_FIXED_BAUD_RATE, 
-                           &rate, sizeof(rate), 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_set_integer(h, IOCTL_FASTCOM_ENABLE_EXTERNAL_TRANSMIT, num_frames);
 }
 
-int serialfc_disable_fixed_baud_rate(HANDLE h)
+int serialfc_disable_external_transmit(serialfc_handle h)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_DISABLE_FIXED_BAUD_RATE, 
-                           NULL, 0, 
-                           NULL, 0, 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_action(h, IOCTL_FASTCOM_DISABLE_EXTERNAL_TRANSMIT);
 }
 
-int serialfc_get_fixed_baud_rate(HANDLE h, int *rate)
+int serialfc_get_external_transmit(serialfc_handle h, unsigned *num_frames)
 {
-  DWORD temp;
-  BOOL result;
-
-  result = DeviceIoControl(h, (DWORD)IOCTL_FASTCOM_GET_FIXED_BAUD_RATE, 
-                           NULL, 0, 
-                           rate, sizeof(*rate), 
-                           &temp, (LPOVERLAPPED)NULL);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
-}
- 
-/******************************************************************************/
-/*!
-
-  \brief Transmits data out of a port.
-
-  \param[in] h 
-    HANDLE to the port
-  \param[in] buf
-    the buffer containing the data to transmit
-  \param[in] size
-    the number of bytes to transmit from 'buf'
-  \param[out] bytes_written
-    the input variable to store how many bytes were actually written
-  \param[in,out] o
-    OVERLAPPED structure for asynchronous operation
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-
-*/
-/******************************************************************************/
-int serialfc_write(HANDLE h, char *buf, unsigned size, unsigned *bytes_written, 
-                   OVERLAPPED *o)
-{
-  BOOL result;
-        
-  result = WriteFile(h, buf, size, (DWORD*)bytes_written, o);
-
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return ioctl_get_integer(h, IOCTL_FASTCOM_GET_EXTERNAL_TRANSMIT, (int *)num_frames);
 }
 
-/******************************************************************************/
-/*!
+int serialfc_set_frame_length(serialfc_handle h, unsigned num_chars)
+{
+    return ioctl_set_integer(h, IOCTL_FASTCOM_SET_FRAME_LENGTH, num_chars);
+}
 
-  \brief Reads data out of a port.
+int serialfc_get_frame_length(serialfc_handle h, unsigned *num_chars)
+{
+    return ioctl_get_integer(h, IOCTL_FASTCOM_GET_FRAME_LENGTH, (int *)num_chars);
+}
 
-  \param[in] h 
-    HANDLE to the port
-  \param[in] buf
-    the input buffer used to store the receive data
-  \param[in] size
-    the maximum number of bytes to read in (typically sizeof(buf))
-  \param[out] bytes_read
-    the user variable to store how many bytes were actually read
-  \param[in,out] o
-    OVERLAPPED structure for asynchronous operation
-      
-  \return 0 
-    if the operation completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
+int serialfc_enable_9bit(serialfc_handle h)
+{
+    return ioctl_action(h, IOCTL_FASTCOM_ENABLE_9BIT);
+}
 
-*/
-/******************************************************************************/
-int serialfc_read(HANDLE h, char *buf, unsigned size, unsigned *bytes_read, 
+int serialfc_disable_9bit(serialfc_handle h)
+{
+    return ioctl_action(h, IOCTL_FASTCOM_DISABLE_9BIT);
+}
+
+int serialfc_get_9bit(serialfc_handle h, unsigned *status)
+{
+    return ioctl_get_boolean(h, IOCTL_FASTCOM_GET_9BIT, status);
+}
+
+int serialfc_enable_fixed_baud_rate(serialfc_handle h, unsigned rate)
+{
+    return ioctl_set_integer(h, IOCTL_FASTCOM_ENABLE_FIXED_BAUD_RATE, rate);
+}
+
+int serialfc_disable_fixed_baud_rate(serialfc_handle h)
+{
+    return ioctl_action(h, IOCTL_FASTCOM_DISABLE_FIXED_BAUD_RATE);
+}
+
+int serialfc_get_fixed_baud_rate(serialfc_handle h, int *rate)
+{
+    return ioctl_get_integer(h, IOCTL_FASTCOM_GET_FIXED_BAUD_RATE, rate);
+}
+
+int serialfc_get_card_type(serialfc_handle h, unsigned *type)
+{
+    return ioctl_get_integer(h, IOCTL_FASTCOM_GET_CARD_TYPE, (int *)type);
+}
+
+int serialfc_write(serialfc_handle h, char *buf, unsigned size,
+                   unsigned *bytes_written, OVERLAPPED *o)
+{
+    int result;
+
+#ifdef _WIN32
+    result = WriteFile(h, buf, size, (DWORD*)bytes_written, o);
+
+    return (result == TRUE) ? 0 : translate_error(GetLastError());
+#else
+    UNUSED(o);
+
+    result = write(h, buf, size);
+
+    if (result == -1)
+        return translate_error(errno);
+
+    *bytes_written = result;
+
+    return 0;
+#endif
+}
+
+int serialfc_write_with_blocking(serialfc_handle h, char *buf, unsigned size,
+                                 unsigned *bytes_written)
+{
+#ifdef _WIN32
+    int result;
+    OVERLAPPED ol;
+
+    memset(&ol, 0, sizeof(ol));
+
+    result = serialfc_write(h, buf, size, bytes_written, &ol);
+
+    if (result == 997)
+        result = GetOverlappedResult(h, &ol, (DWORD *)bytes_written, 1);
+
+    return (result == TRUE) ? 0 : translate_error(GetLastError());
+#else
+    return serialfc_write(h, buf, size, bytes_written, 0);
+#endif
+}
+
+int serialfc_read(serialfc_handle h, char *buf, unsigned size, unsigned *bytes_read,
                   OVERLAPPED *o)
 {
-  BOOL result;
+    int result;
+#ifdef _WIN32
 
-  result = ReadFile(h, buf, size, (DWORD*)bytes_read, o);
+    result = ReadFile(h, buf, size, (DWORD*)bytes_read, o);
 
-  return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    return (result == TRUE) ? 0 : translate_error(GetLastError());
+#else
+    UNUSED(o);
+
+    result = read(h, buf, size);
+
+    if (result == -1)
+        return translate_error(errno);
+
+    *bytes_read = result;
+
+    return 0;
+#endif
 }
 
-/******************************************************************************/
-/*!
-
-  \brief Closes the handle to a SerialFC port.
-
-  \param[in] h 
-    HANDLE to the port
-      
-  \return 0 
-    if closing the port completed successfully
-  \return >= 1 
-    if the operation failed (see MSDN 'System Error Codes')
-
-*/
-/******************************************************************************/
-int serialfc_disconnect(HANDLE h)
+int serialfc_read_with_blocking(serialfc_handle h, char *buf, unsigned size,
+                                unsigned *bytes_read)
 {
-	BOOL result;
+#ifdef _WIN32
+    int result;
+    OVERLAPPED ol;
 
-	result = CloseHandle(h);
+    memset(&ol, 0, sizeof(ol));
 
-	return (result == TRUE) ? ERROR_SUCCESS : GetLastError();
+    result = serialfc_read(h, buf, size, bytes_read, &ol);
+
+    if (result == 997)
+        result = GetOverlappedResult(h, &ol, (DWORD *)bytes_read, 1);
+
+    return (result == TRUE) ? 0 : translate_error(GetLastError());
+#else
+    return serialfc_read(h, buf, size, bytes_read, 0);
+#endif
+}
+
+int serialfc_disconnect(serialfc_handle h)
+{
+    int result;
+
+#ifdef _WIN32
+    result = CloseHandle(h);
+
+    return (result == TRUE) ? 0 : GetLastError();
+#else
+
+    result = close(h);
+
+    return (result != -1) ? 0 : errno;
+#endif
 }

@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013 Commtech, Inc.
+    Copyright (C) 2014 Commtech, Inc.
 
     This file is part of fscc-windows.
 
@@ -112,6 +112,7 @@ struct fscc_memory_cap {
 #define FSCC_GET_WAIT_ON_WRITE CTL_CODE(FSCC_IOCTL_MAGIC, 0x818, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #define FSCC_TRACK_INTERRUPTS CTL_CODE(FSCC_IOCTL_MAGIC, 0x819, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCC_GET_MEM_USAGE CTL_CODE(FSCC_IOCTL_MAGIC, 0x81A, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #ifdef __cplusplus
 }

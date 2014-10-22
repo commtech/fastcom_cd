@@ -6,7 +6,7 @@ int main(void)
     Fscc::Port p(0);
 
     regs.CCR0 = 0x0011201c;
-    regs.BGR = 10;
+    regs.BGR = 0;
 
     p.SetRegisters(regs);
     

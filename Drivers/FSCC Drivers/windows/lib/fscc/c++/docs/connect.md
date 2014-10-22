@@ -1,15 +1,13 @@
 # Connect
 
-Opening a handle using this API will only give you access to the
-synchronous functionality of the card. You will need to use the COM ports
-if you would like to use the asynchronous functionality.
+Opening a handle using this API will only give you access to the synchronous functionality of the card. You will need to use the COM ports if you would like to use the asynchronous functionality.
 
 ###### Support
-| Code           | Version
-| -------------- | --------
-| `fscc-windows` | `v2.0.0` 
-| `fscc-linux`   | `v2.0.0` 
-| `cppfscc`      | `v1.0.0`
+| Code | Version |
+| ---- | ------- |
+| fscc-windows | 2.0.0 |
+| fscc-linux | 2.0.0 |
+| cppfscc | 1.0.0 |
 
 
 ## Connect
@@ -21,10 +19,10 @@ Port(const Port &other) throw(SystemException);
 Port& operator=(const Port &other) throw(SystemException);
 ```
 
-| Exception                | Base Exception    | Cause
-| ------------------------ | ----------------- | ------------------------
-| `PortNotFoundException`  | `SystemException` | Port not found
-| `InvalidAccessException` | `SystemException` | Insufficient permissions
+| Exception | Base Exception | Cause |
+| --------- | -------------- | ----- |
+| `PortNotFoundException` | `SystemException` | Port not found |
+| `InvalidAccessException` | `SystemException` | Insufficient permissions |
 
 ###### Examples
 Connect to port 0.
@@ -37,5 +35,5 @@ FSCC::Port p(0);
 
 
 ### Additional Resources
-- Complete example: [`examples\tutorial.cpp`](https://github.com/commtech/cppfscc/blob/master/examples/tutorial.cpp)
-- Implemenation details: [`src\fscc.cpp`](https://github.com/commtech/cppfscc/blob/master/src/fscc.cpp)
+- Complete example: [`examples/tutorial.cpp`](../examples/tutorial.cpp)
+- Implementation details: [`src/fscc.cpp`](../src/fscc.cpp)

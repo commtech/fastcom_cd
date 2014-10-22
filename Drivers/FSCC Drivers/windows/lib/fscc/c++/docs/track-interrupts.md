@@ -1,11 +1,10 @@
 # Track Interrupts
 
-
 ###### Support
-| Code           | Version
-| -------------- | --------
-| `fscc-windows` | `v2.7.0` 
-| `cppfscc`      | `v1.0.0`
+| Code | Version |
+| ---- | ------- |
+| fscc-windows | 2.7.0 |
+| cppfscc | 1.0.0 |
 
 
 ## Track Interrupts (Overlapped)
@@ -14,16 +13,16 @@ int TrackInterrupts(unsigned interrupts, unsigned *matches, OVERLAPPED *o) throw
 
 ```
 
-| Parameter    | Type           | Description
-| ------------ | -------------- | -----------------------
-| `interrupts` | `unsigned`     | The interrupt(s) to track
-| `matches`    | `unsigned *`   | The interrupt(s) that happened
-| `o`          | `OVERLAPPED *` | [Overlapped IO structure](http://msdn.microsoft.com/en-us/library/windows/desktop/ms686358.aspx)
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `interrupts` | `unsigned` | The interrupt(s) to track |
+| `matches` | `unsigned *` | The interrupt(s) that happened |
+| `o` | `OVERLAPPED *` | [Overlapped IO structure](http://msdn.microsoft.com/en-us/library/windows/desktop/ms686358.aspx) |
 
-| Return Value | Cause
-| ------------ | ------------------------------------------------------------------
-| 0            | Success
-| ~            | Unknown system error
+| Return Value | Cause |
+| ------------:| ----- |
+| 0 | Success |
+| ~ | Unknown system error |
 
 ###### Examples
 ```c++
@@ -41,13 +40,13 @@ p.TrackInterrupts(0x00000400, &matches, &o);
 unsigned TrackInterrupts(unsigned interrupts) throw(SystemException);
 ```
 
-| Parameter    | Type       | Description
-| ------------ | ---------- | -----------------------
-| `interrupts` | `unsigned` | The interrupt(s) to track
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `interrupts` | `unsigned` | The interrupt(s) to track |
 
-| Return
-| ---------------------------
-| What interrupts where matched
+| Return |
+| ------ |
+| What interrupts where matched |
 
 
 ###### Examples
@@ -55,9 +54,7 @@ unsigned TrackInterrupts(unsigned interrupts) throw(SystemException);
 #include <fscc.hpp>
 ...
 
-unsigned matches;
-
-matches = p.TrackInterrupts(0x00000400);
+unsigned matches = p.TrackInterrupts(0x00000400);
 ```
 
 
@@ -66,14 +63,14 @@ matches = p.TrackInterrupts(0x00000400);
 unsigned TrackInterrupts(unsigned interrupts, unsigned timeout) throw(SystemException);
 ```
 
-| Parameter    | Type       | Description
-| ------------ | ---------- | -----------------------
-| `interrupts` | `unsigned` | The interrupt(s) to track
-| `timeout`    | `unsigned` | Number of milliseconds to wait for interrupts
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `interrupts` | `unsigned` | The interrupt(s) to track |
+| `timeout` | `unsigned` | Number of milliseconds to wait for interrupts |
 
-| Return
-| ---------------------------
-| What interrupts where matched
+| Return |
+| ------ |
+| What interrupts where matched |
 
 
 ###### Examples
@@ -81,12 +78,10 @@ unsigned TrackInterrupts(unsigned interrupts, unsigned timeout) throw(SystemExce
 #include <fscc.hpp>
 ...
 
-unsigned matches;
-
-matches = p.TrackInterrupts(0x00000400, 100);
+unsigned matches = p.TrackInterrupts(0x00000400, 100);
 ```
 
 
 ### Additional Resources
-- Complete example: [`examples\track-interrupts.cpp`](https://github.com/commtech/cppfscc/blob/master/examples/track-interrupts.cpp)
-- Implemenation details: [`src\fscc.cpp`](https://github.com/commtech/cppfscc/blob/master/src/fscc.cpp)
+- Complete example: [`examples/track-interrupts.cpp`](../examples/track-interrupts.cpp)
+- Implementation details: [`src/fscc.cpp`](../src/fscc.cpp)

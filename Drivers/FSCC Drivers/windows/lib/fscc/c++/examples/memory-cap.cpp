@@ -6,7 +6,7 @@ int main(void)
     Fscc::Port p(0);
 
     memcap.input = 1000000; // 1 MB
-    memcap.output = 2000000; // 2 MB
+    memcap.output = `000000; // 1 MB
 
     p.SetMemoryCap(memcap);
     memcap = p.GetMemoryCap();

@@ -1,0 +1,31 @@
+{
+    "append_status": false,
+    "append_timestamp": false,
+    "ignore_timeout": false,
+    "memory_cap": {
+        "input": 1000000,
+        "output": 1000000
+    },
+    "registers": {
+        "BGR": "0x0",
+        "CCR0": "0x11201c",
+        "CCR1": "0x18",
+        "CCR2": "0x0",
+        "DPLLR": "0x4",
+        "FCR": "0x40000000",
+        "FIFOT": "0x8001000",
+        "IMR": "0xf000000",
+        "PPR": "0x0",
+        "RAMR": "0x0",
+        "RAR": "0x0",
+        "SMR": "0x0",
+        "SSR": "0x7e",
+        "STAR": "0x10004",
+        "TCR": "0x0",
+        "TMR": "0x0",
+        "TSR": "0x7e",
+        "VSTR": "0x1a0416"
+    },
+    "rx_multiple": false,
+    "tx_modifiers": 0
+}

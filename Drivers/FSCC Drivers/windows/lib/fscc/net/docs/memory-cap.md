@@ -1,11 +1,11 @@
 # Memory Cap
 
 ###### Support
-| Code           | Version
-| -------------- | --------
-| `fscc-windows` | `v2.0.0` 
-| `fscc-linux`   | `v2.0.0` 
-| `netfscc`      | `v1.0.0`
+| Code  | Version |
+| ----- | ------- |
+| fscc-windows | 2.0.0 |
+| fscc-linux | 2.0.0 |
+| netfscc | 1.0.0 |
 
 
 ## Property
@@ -31,11 +31,11 @@ var output = p.MemoryCap.Output;
 using Fscc;
 ...
 
-p.MemoryCap.Input = 1000000;
-p.MemoryCap.Output = 2000000;
+p.MemoryCap.Input = 1000000; // 1MB
+p.MemoryCap.Output = 1000000; // 1MB
 ```
 
 
 ### Additional Resources
-- Complete example: [`examples\memory-cap.cs`](https://github.com/commtech/netfscc/blob/master/examples/memory-cap.cs)
-- Implemenation details: [`src\Fscc.cs`](https://github.com/commtech/netfscc/blob/master/src/Fscc.cs)
+- Complete example: [`examples/memory-cap.cs`](../examples/memory-cap.cs)
+- Implementation details: [`src/Fscc.cs`](../src/Fscc.cs)

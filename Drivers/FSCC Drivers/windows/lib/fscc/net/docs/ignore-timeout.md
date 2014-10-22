@@ -1,12 +1,11 @@
 # Ignore Timeout
 
-
 ###### Support
-| Code           | Version
-| -------------- | --------
-| `fscc-windows` | `v2.0.0` 
-| `fscc-linux`   | `v2.0.0` 
-| `netfscc`      | `v1.0.0`
+| Code  | Version |
+| ----- | ------- |
+| fscc-windows | 2.0.0 |
+| fscc-linux | 2.0.0 |
+| netfscc | 1.0.0 |
 
 
 ## Property
@@ -46,5 +45,5 @@ p.AppendStatus = false;
 
 
 ### Additional Resources
-- Complete example: [`examples\ignore-timeout.cs`](https://github.com/commtech/netfscc/blob/master/examples/ignore-timeout.cs)
-- Implemenation details: [`src\Fscc.cs`](https://github.com/commtech/netfscc/blob/master/src/Fscc.cs)
+- Complete example: [`examples/ignore-timeout.cs`](../examples/ignore-timeout.cs)
+- Implementation details: [`src/Fscc.cs`](../src/Fscc.cs)
