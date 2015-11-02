@@ -1,5 +1,5 @@
 ;
-;    Copyright (C) 2014  Commtech, Inc.
+;    Copyright (C) 2015  Commtech, Inc.
 ;
 ;    This file is part of fscc-windows.
 ;
@@ -24,7 +24,7 @@ Class = FSCC
 ClassGuid = {4d36e878-e325-11ce-bfc1-08002be11319}
 Provider=%ManufacturerName%
 CatalogFile=fastcom.cat
-DriverVer=10/14/2014,2.7.4
+DriverVer=11/02/2015,2.7.4
 
 [ClassInstall32]
 Addreg=FsccClass_AddReg

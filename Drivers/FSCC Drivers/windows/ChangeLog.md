@@ -1,5 +1,10 @@
 # ChangeLog
 
+## [2.7.5](https://github.com/commtech/fscc-windows/releases/tag/v2.7.5) (10/30/2015)
+- Fixed the blue screen issue when receive_length is negative.
+- Added tools for more thorough debugging.
+- Updated copyright years.
+
 ## [2.7.4](https://github.com/commtech/fscc-windows/releases/tag/v2.7.4) (10/14/2014)
 - Fixed memory cap issues with outgoing data.
 - Fixed memory cap issues with incoming data.
