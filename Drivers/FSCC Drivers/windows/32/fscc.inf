@@ -24,7 +24,7 @@ Class = FSCC
 ClassGuid = {4d36e878-e325-11ce-bfc1-08002be11319}
 Provider=%ManufacturerName%
 CatalogFile=fastcom.cat
-DriverVer=11/02/2015,2.7.4
+DriverVer=11/03/2015,2.7.5
 
 [ClassInstall32]
 Addreg=FsccClass_AddReg
