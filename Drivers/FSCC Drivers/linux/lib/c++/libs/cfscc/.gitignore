@@ -1,0 +1,14 @@
+*.so
+*.o
+*~
+*.obj
+*.dll
+*.bak
+*.lib
+*.exp
+*.exe
+*.hex
+*.gch
+*.out
+*.ilk
+*.pdb

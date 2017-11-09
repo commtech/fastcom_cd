@@ -11,7 +11,7 @@ out the latest code you will need Git and to run the following in a terminal.
 git clone --recursive git://github.com/commtech/fscc-linux.git fscc
 ```
 
-_You can also download driver packages directly from our
+You can also download driver packages directly from our
 [website](http://www.commtech-fastcom.com/CommtechSoftware.html).
 
 ##### Switch To Stable Version
@@ -105,7 +105,7 @@ There is documentation for each specific function listed below, but lets get sta
 with a quick programming example for fun.
 
 _This tutorial has already been set up for you at_
-[`fscc/examples/tutorial.c`](https://github.com/commtech/fscc-linux/tree/master/examples/tutorial.c).
+[`fscc/examples/tutorial.c`](examples/tutorial.c).
 
 Create a new C file (named tutorial.c) with the following code.
 
@@ -157,27 +157,27 @@ Now attach the included loopback connector.
 Hello world!
 ```
 
-You have now transmitted and received an HDLC frame! 
+You have now transmitted and received an HDLC frame!
 
 
 ## API Reference
 
-There are likely other configuration options you will need to set up for your 
+There are likely other configuration options you will need to set up for your
 own program. All of these options are described on their respective documentation page.
 
-- [Connect](https://github.com/commtech/fscc-linux/blob/master/docs/connect.md)
-- [Append Status](https://github.com/commtech/fscc-linux/blob/master/docs/append-status.md)
-- [Append Timestamp](https://github.com/commtech/fscc-linux/blob/master/docs/append-timestamp.md)
-- [Clock Frequency](https://github.com/commtech/fscc-linux/blob/master/docs/clock-frequency.md)
-- [Ignore Timeout](https://github.com/commtech/fscc-linux/blob/master/docs/ignore-timeout.md)
-- [RX Multiple](https://github.com/commtech/fscc-linux/blob/master/docs/rx-multiple.md)
-- [Memory Cap](https://github.com/commtech/fscc-linux/blob/master/docs/memory-cap.md)
-- [Purge](https://github.com/commtech/fscc-linux/blob/master/docs/purge.md)
-- [Registers](https://github.com/commtech/fscc-linux/blob/master/docs/registers.md)
-- [TX Modifiers](https://github.com/commtech/fscc-linux/blob/master/docs/tx-modifiers.md)
-- [Write](https://github.com/commtech/fscc-linux/blob/master/docs/write.md)
-- [Read](https://github.com/commtech/fscc-linux/blob/master/docs/read.md)
-- [Disconnect](https://github.com/commtech/fscc-linux/blob/master/docs/disconnect.md)
+- [Connect](docs/connect.md)
+- [Append Status](docs/append-status.md)
+- [Append Timestamp](docs/append-timestamp.md)
+- [Clock Frequency](docs/clock-frequency.md)
+- [Ignore Timeout](docs/ignore-timeout.md)
+- [Memory Cap](docs/memory-cap.md)
+- [Purge](docs/purge.md)
+- [Read](docs/read.md)
+- [Registers](docs/registers.md)
+- [RX Multiple](docs/rx-multiple.md)
+- [TX Modifiers](docs/tx-modifiers.md)
+- [Write](docs/write.md)
+- [Disconnect](docs/disconnect.md)
 
 
 There are also multiple code libraries to make development easier.
@@ -195,7 +195,7 @@ this. Possibly the simplest method is using sysfs and the command line.
 echo 03000000 > /sys/class/fscc/fscc0/registers/fcr
 ```
 
-More information about using the UART's is available in the 
+More information about using the UART's is available in the
 [SerialFC driver README](https://github.com/commtech/serialfc-linux/blob/master/README.md) file.
 
 
@@ -299,10 +299,14 @@ There are multiple ways of allowing more available UART room which can
 be found in section VII.
 
 
-## Dependencies
+## Build Dependencies
+- Kernel Build Tools (GCC, make, kernel headers, etc)
+
+
+## Run-time Dependencies
+- OS: Linux
 - Base Installation: >= 2.6.16 (might work with a lower version)
 - Sysfs Support: >= 2.6.25
-- Other: gcc, make, kernel headers
 
 
 ## API Compatibility
@@ -311,6 +315,6 @@ We follow [Semantic Versioning](http://semver.org/) when creating releases.
 
 ## License
 
-Copyright (C) 2013 [Commtech, Inc.](http://commtech-fastcom.com)
+Copyright (C) 2014 [Commtech, Inc.](http://commtech-fastcom.com)
 
 Licensed under the [GNU General Public License v3](http://www.gnu.org/licenses/gpl.txt).

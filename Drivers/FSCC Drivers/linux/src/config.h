@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2014 Commtech, Inc.
+	Copyright (C) 2016 Commtech, Inc.
 
 	This file is part of fscc-linux.
 
@@ -58,8 +58,8 @@
 //#define DISABLE_XTAL /* Used when setting the clock on newer cards. */
 
 #define SYSFS_READ_ONLY_MODE S_IRUGO
-#define SYSFS_WRITE_ONLY_MODE S_IWUGO
-#define SYSFS_READ_WRITE_MODE S_IWUGO | S_IRUGO
+#define SYSFS_WRITE_ONLY_MODE 0220
+#define SYSFS_READ_WRITE_MODE 0660
 
 #endif
 

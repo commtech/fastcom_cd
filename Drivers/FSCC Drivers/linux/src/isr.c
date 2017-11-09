@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2014 Commtech, Inc.
+	Copyright (C) 2016 Commtech, Inc.
 
 	This file is part of fscc-linux.
 
@@ -137,7 +137,7 @@ void iframe_worker(unsigned long data)
 			receive_length = max((int)(rxcnt - rxcnt % 4), (int)0);
 		}
 
-		if (!receive_length) {
+		if (receive_length <= 0) {
 			spin_unlock_irqrestore(&port->pending_iframe_spinlock, frame_flags);
 			spin_unlock_irqrestore(&port->board_rx_spinlock, board_flags);
 			return;

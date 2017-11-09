@@ -22,6 +22,7 @@
 #include <linux/pci.h> /* struct pci_dev */
 #include <linux/fs.h> /* struct file_operations */
 #include <linux/version.h>
+#include <asm/uaccess.h>
 
 #include "card.h"
 #include "utils.h"
@@ -60,6 +61,7 @@ struct pci_device_id fc_id_table[] = {
 	{ COMMTECH_VENDOR_ID, FSCC_UA_ID, PCI_ANY_ID, 0, 0, 0 },
 	{ COMMTECH_VENDOR_ID, SFSCCe_4_ID, PCI_ANY_ID, 0, 0, 0 },
 	{ COMMTECH_VENDOR_ID, SFSCC_4_UA_CPCI_ID, PCI_ANY_ID, 0, 0, 0 },
+	{ COMMTECH_VENDOR_ID, SFSCCe_4_LVDS_UA_ID, PCI_ANY_ID, 0, 0, 0 },
 	{ COMMTECH_VENDOR_ID, SFSCC_4_UA_LVDS_ID, PCI_ANY_ID, 0, 0, 0 },
 	{ COMMTECH_VENDOR_ID, SFSCC_UA_LVDS_ID, PCI_ANY_ID, 0, 0, 0 },
 	{ COMMTECH_VENDOR_ID, FSCCe_4_UA_ID, PCI_ANY_ID, 0, 0, 0 },
@@ -83,6 +85,8 @@ int serialfc_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 			       unsigned long arg)
 #endif
 {
+    struct ioctl_get_dev_info_struct l_dev_data;
+
     struct serialfc_port *port = 0;
 	int error_code = 0;
 
@@ -205,11 +209,36 @@ int serialfc_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 		error_code = fastcom_get_9bit(port, (unsigned *)arg);
 		break;
 
+    case IOCTL_FASTCOM_SET_BAUD_RATE:
+      error_code = fastcom_set_baud_rate(port, arg);
+      break;
+
+    case IOCTL_FASTCOM_GET_BAUD_RATE:
+      error_code = fastcom_get_baud_rate(port, (unsigned long*)arg);
+      break;
+
 	case IOCTL_FASTCOM_ENABLE_FIXED_BAUD_RATE:
 	case IOCTL_FASTCOM_DISABLE_FIXED_BAUD_RATE:
 	case IOCTL_FASTCOM_GET_FIXED_BAUD_RATE:
         error_code = -EPROTONOSUPPORT;
         break;
+
+    case IOCTL_FASTCOM_GET_DEV_INFO:
+            /* gather device data and pass back to user */
+            l_dev_data.vendor = port->card->pci_dev->vendor;
+            l_dev_data.device = port->card->pci_dev->device;
+            l_dev_data.bus    = port->card->pci_dev->bus->number;
+
+            if (port->card->pci_dev->slot == NULL)
+                l_dev_data.slot = 0; /* nothing else to do */
+            else
+                l_dev_data.slot = port->card->pci_dev->slot->number;
+
+            if (copy_to_user((void *)arg, &l_dev_data, sizeof(l_dev_data))) {
+	            error_code = -ENODATA; // Report error
+                printk(KERN_ERR DEVICE_NAME " ioctl get-dev-info failed copy_to_user\n");
+            }
+            break;
 
 	default:
 		dev_dbg(port->device, "unknown ioctl 0x%x\n", cmd);
@@ -368,7 +397,7 @@ struct serialfc_card *serialfc_card_find(struct pci_dev *pdev,
 }
 
 MODULE_LICENSE("GPL");
-MODULE_VERSION("2.3.0");
+MODULE_VERSION("2.3.1");
 MODULE_AUTHOR("William Fagan <willf@commtech-fastcom.com>");
 
 MODULE_DESCRIPTION("Registers the UARTs on the async series of Commtech cards "\

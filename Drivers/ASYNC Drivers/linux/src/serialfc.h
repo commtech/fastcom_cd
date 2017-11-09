@@ -43,6 +43,7 @@
 #define FSCC_UA_ID 0x001d
 #define SFSCCe_4_ID 0x001e
 #define SFSCC_4_CPCI_ID 0x001f
+#define SFSCCe_4_LVDS_UA_ID 0x0022
 #define SFSCC_4_UA_CPCI_ID 0x0023
 #define SFSCC_4_UA_LVDS_ID 0x0025
 #define SFSCC_UA_LVDS_ID 0x0026
@@ -100,6 +101,13 @@ enum FASTCOM_CARD_TYPE { CARD_TYPE_PCI, CARD_TYPE_PCIe, CARD_TYPE_FSCC, CARD_TYP
 /* FSCC Bar0 register set */
 #define VSTR_OFFSET 0x4c
 
+struct ioctl_get_dev_info_struct {
+      short vendor;       /* vendor ID */
+      short device;       /* device ID */
+      unsigned char bus;  /* PCI bus number */
+      unsigned char slot; /* slot number */
+};
+
 #define SERIALFC_IOCTL_MAGIC 0x19
 
 #define IOCTL_FASTCOM_ENABLE_RS485 _IO(SERIALFC_IOCTL_MAGIC, 0)
@@ -156,5 +164,10 @@ enum FASTCOM_CARD_TYPE { CARD_TYPE_PCI, CARD_TYPE_PCIe, CARD_TYPE_FSCC, CARD_TYP
 #define IOCTL_FASTCOM_DISABLE_FIXED_BAUD_RATE _IO(SERIALFC_IOCTL_MAGIC, 30)
 #define IOCTL_FASTCOM_GET_FIXED_BAUD_RATE _IOR(SERIALFC_IOCTL_MAGIC, 31, unsigned *)
 #endif
+
+#define IOCTL_FASTCOM_GET_DEV_INFO _IOR(SERIALFC_IOCTL_MAGIC, 32, struct ioctl_get_dev_info_struct *)
+
+#define IOCTL_FASTCOM_GET_BAUD_RATE _IOR(SERIALFC_IOCTL_MAGIC, 33, unsigned long*)
+#define IOCTL_FASTCOM_SET_BAUD_RATE _IOW(SERIALFC_IOCTL_MAGIC, 34, unsigned long)
 
 #endif

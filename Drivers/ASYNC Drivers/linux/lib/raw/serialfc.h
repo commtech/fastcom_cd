@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013 Commtech, Inc.
+    Copyright (C) 2014 Commtech, Inc.
 
     This file is part of serialfc-linux.
 
@@ -27,6 +27,8 @@ extern "C"
 #endif
 
 #include <sys/ioctl.h>
+
+enum card_type { SERIALFC_CARD_TYPE_PCI=0, SERIALFC_CARD_TYPE_PCIE, SERIALFC_CARD_TYPE_FSCC, SERIALFC_CARD_TYPE_UNKNOWN };
 
 #define SERIALFC_IOCTL_MAGIC 0x19
 
@@ -72,6 +74,8 @@ extern "C"
 
 #define IOCTL_FASTCOM_SET_CLOCK_BITS _IOW(SERIALFC_IOCTL_MAGIC, 28, const unsigned char[20])
 
+#define IOCTL_FASTCOM_GET_BAUD_RATE _IOR(SERIALFC_IOCTL_MAGIC, 33, unsigned long*)
+#define IOCTL_FASTCOM_SET_BAUD_RATE _IOW(SERIALFC_IOCTL_MAGIC, 34, unsigned long)
 
 #ifdef __cplusplus
 }
