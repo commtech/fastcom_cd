@@ -24,7 +24,7 @@ Class=Ports
 ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
 Provider=%ManufacturerName%
 CatalogFile=fastcom.cat
-DriverVer=02/13/2014,2.4.5
+DriverVer=03/14/2014,2.4.6
 
 
 ; ================= Device Install section =====================
