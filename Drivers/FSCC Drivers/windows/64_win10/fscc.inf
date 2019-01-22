@@ -1,0 +1,118 @@
+;
+;    Copyright (C) 2016  Commtech, Inc.
+;
+;    This file is part of fscc-windows.
+;
+;    fscc-windows is free software: you can redistribute it and/or modify it
+;    under the terms of the GNU General Public License as published bythe Free
+;    Software Foundation, either version 3 of the License, or (at your option)
+;    any later version.
+;
+;    fscc-windows is distributed in the hope that it will be useful, but WITHOUT
+;    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+;    more details.
+;
+;    You should have received a copy of the GNU General Public License along
+;    with fscc-windows.  If not, see <http://www.gnu.org/licenses/>.
+;
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class = FSCC
+ClassGuid = {4d36e878-e325-11ce-bfc1-08002be11319}
+Provider=%ManufacturerName%
+CatalogFile=fastcom.cat
+DriverVer=08/03/2018,2.7.7
+
+[ClassInstall32]
+Addreg=FsccClass_AddReg
+CopyFiles=FsccClassInstallerCopyFiles
+ 
+[FsccClass_AddReg]
+HKR,,,0,%DeviceClassName%
+HKR,,Icon,,-10
+HKR,,Installer32,,"fscc.dll,FsccClassInstaller"
+
+[FsccClassInstallerCopyFiles]
+fscc.dll
+
+[DestinationDirs]
+DefaultDestDir = 12
+FSCC_Device_CoInstaller_CopyFiles = 11
+FsccClassInstallerCopyFiles = 11
+
+; ================= Class section =====================
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+fscc.sys  = 1,,
+fscc.dll = 1,,
+WdfCoInstaller01009.dll = 1 ; make sure the number matches with SourceDisksNames
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NTAMD64
+
+[Standard.NTAMD64]
+%SyncPort.DeviceDesc%=FSCC_Device, Fscc\Port1, Fscc\Port2
+
+
+[FSCC_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+fscc.sys
+
+;-------------- Service installation
+[FSCC_Device.NT.Services]
+AddService = FSCC,0x00000002, FSCC_Service_Inst
+
+; -------------- FSCC driver install sections
+[FSCC_Service_Inst]
+DisplayName    = %FSCC.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StarTtype      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\fscc.sys
+LoadOrderGroup = Multiple Port
+
+;
+;--- FSCC_Device Coinstaller installation ------
+;
+
+
+[FSCC_Device.NT.CoInstallers]
+AddReg=FSCC_Device_CoInstaller_AddReg
+CopyFiles=FSCC_Device_CoInstaller_CopyFiles
+
+[FSCC_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller01009.dll,WdfCoInstaller"
+;HKLM,System\CurrentControlSet\Control\CoDeviceInstallers, {4d36e878-e325-11ce-bfc1-08002be11318},0x00010008, ;"fscc.dll,FsccClassInstaller"
+
+[FSCC_Device_CoInstaller_CopyFiles]
+WdfCoInstaller01009.dll
+;fscc.dll
+
+;[SourceDisksFiles]
+;WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+;fscc.dll=1
+
+[FSCC_Device.NT.Wdf]
+KmdfService =  FSCC, FSCC_wdfsect
+[FSCC_wdfsect]
+KmdfLibraryVersion = 1.9
+
+[Strings]
+ManufacturerName = "Commtech, Inc."
+DiskName = "FSCC Installation Disk"
+FSCC.SVCDESC = "Commtech FSCC driver"
+DeviceClassName = "Ports (FSCC)"
+
+SyncPort.DeviceDesc = "FSCC Port"
