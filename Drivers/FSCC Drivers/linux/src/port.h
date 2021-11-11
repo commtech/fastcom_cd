@@ -1,20 +1,23 @@
 /*
-	Copyright (C) 2014 Commtech, Inc.
+	Copyright (c) 2019 Commtech, Inc.
 
-	This file is part of fscc-linux.
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
 
-	fscc-linux is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
 
-	fscc-linux is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with fscc-linux.	If not, see <http://www.gnu.org/licenses/>.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
 
 */
 
@@ -109,6 +112,7 @@ struct fscc_port {
 
 	wait_queue_head_t input_queue;
 	wait_queue_head_t output_queue;
+    wait_queue_head_t status_queue;
 
 	struct fscc_flist queued_iframes; /* Frames already retrieved from the FIFO */
 	struct fscc_flist queued_oframes; /* Frames not yet in the FIFO yet */
@@ -145,7 +149,7 @@ struct fscc_port {
 	struct fscc_memory_cap memory_cap;
 	unsigned ignore_timeout;
 	unsigned rx_multiple;
-	int tx_modifiers;
+	unsigned tx_modifiers;
 
 	struct timer_list timer;
 
@@ -252,7 +256,7 @@ void fscc_port_increment_interrupt_counts(struct fscc_port *port,
 										  __u32 isr_value);
 #endif /* DEBUG */
 
-int fscc_port_set_tx_modifiers(struct fscc_port *port, int tx_modifiers);
+int fscc_port_set_tx_modifiers(struct fscc_port *port, unsigned tx_modifiers);
 unsigned fscc_port_get_tx_modifiers(struct fscc_port *port);
 void fscc_port_execute_transmit(struct fscc_port *port, unsigned dma);
 

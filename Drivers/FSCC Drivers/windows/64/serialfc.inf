@@ -1,5 +1,5 @@
 ;
-;    Copyright (C) 2014  Commtech, Inc.
+;    Copyright (C) 2018  Commtech, Inc.
 ;
 ;    This file is part of serialfc-windows.
 ;
@@ -24,7 +24,7 @@ Class=Ports
 ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
 Provider=%ManufacturerName%
 CatalogFile=fastcom.cat
-DriverVer=04/11/2017,2.4.6
+DriverVer=12/12/2018,2.4.7
 
 
 ; ================= Device Install section =====================
@@ -37,12 +37,14 @@ ExcludeFromSelect=*
 
 [SourceDisksFiles]
 serialfc.sys=1
+WdfCoInstaller01009.dll=1 ; make sure the number matches with SourceDisksNames
 
 [SourceDisksNames]
 1=%DISK_NAME%,
 
 [DestinationDirs]
 DefaultDestDir  = 12
+CoInstaller_CopyFiles = 11
 
 ; For XP and later
 [Standard.NTAMD64]
@@ -73,18 +75,12 @@ ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
 ServiceBinary  = %12%\serialfc.sys
 
 ;-------------- WDF Coinstaller installation
-[DestinationDirs]
-CoInstaller_CopyFiles = 11
-
 [Serial_Inst.NT.CoInstallers]
 AddReg=CoInstaller_AddReg
 CopyFiles=CoInstaller_CopyFiles
 
 [CoInstaller_CopyFiles]
 WdfCoInstaller01009.dll
-
-[SourceDisksFiles]
-WdfCoInstaller01009.dll=1 ; make sure the number matches with SourceDisksNames
 
 [CoInstaller_AddReg]
 HKR,,CoInstallers32,0x00010000, "WdfCoInstaller01009.dll,WdfCoInstaller"

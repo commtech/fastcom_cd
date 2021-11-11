@@ -1,27 +1,30 @@
 /*
-	Copyright (C) 2016 Commtech, Inc.
+	Copyright (c) 2019 Commtech, Inc.
 
-	This file is part of fscc-linux.
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
 
-	fscc-linux is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
 
-	fscc-linux is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with fscc-linux.	If not, see <http://www.gnu.org/licenses/>.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
 
 */
 
 #include <linux/version.h> /* LINUX_VERSION_CODE, KERNEL_VERSION */
-
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
 #include <asm/uaccess.h> /* copy_*_user in <= 2.6.24 */
-
+#endif
 #include "port.h"
 #include "frame.h" /* struct fscc_frame */
 #include "card.h" /* fscc_card_* */
@@ -163,6 +166,7 @@ struct fscc_port *fscc_port_new(struct fscc_card *card, unsigned channel,
 
 	init_waitqueue_head(&port->input_queue);
 	init_waitqueue_head(&port->output_queue);
+    init_waitqueue_head(&port->status_queue);
 
 	cdev_init(&port->cdev, fops);
 	port->cdev.owner = THIS_MODULE;
@@ -273,7 +277,11 @@ struct fscc_port *fscc_port_new(struct fscc_card *card, unsigned channel,
 
 	fscc_port_set_clock_bits(port, clock_bits);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0)
+	timer_setup(&port->timer, &timer_handler, 0);
+#else
 	setup_timer(&port->timer, &timer_handler, (unsigned long)port);
+#endif
 
 	if (fscc_port_has_dma(port)) {
 		fscc_port_execute_RST_R(port);
@@ -713,6 +721,7 @@ unsigned fscc_port_get_RXCNT(struct fscc_port *port)
 	/* Not sure why, but this can be larger than 8192. We add
        the 8192 check here so other code can count on the value
        not being larger than 8192. */
+	fifo_bc_value = fifo_bc_value & 0x00003FFF;
 	if(fifo_bc_value > 8192)
 	    fifo_bc_value = 0;
 	    
@@ -1024,8 +1033,7 @@ void fscc_port_set_clock_bits(struct fscc_port *port,
        greater than 6 and 232 cards. Some old protoype SuperFSCC cards will 
        need to manually disable XTAL as they are not supported in this driver 
        by default. */
-    if ((fscc_port_get_PDEV(port) == 0x0f && fscc_port_get_PREV(port) <= 6) ||
-        fscc_port_get_PDEV(port) == 0x16) {
+    if (fscc_port_get_PDEV(port) == 0x0f && fscc_port_get_PREV(port) <= 6) {
         clock_data[15] &= 0xfb;
     }
     else {
@@ -1056,10 +1064,6 @@ void fscc_port_set_clock_bits(struct fscc_port *port,
 	for (i = 19; i >= 0; i--) {
 		for (j = 7; j >= 0; j--) {
 			int bit = ((clock_data[i] >> j) & 1);
-
-            /* This is required for 4-port cards. I'm not sure why at the
-               moment */
-			data[data_index++] = new_fcr_value;
 
 			if (bit)
 				new_fcr_value |= dta_value; /* Set data bit */
@@ -1307,7 +1311,7 @@ void fscc_port_increment_interrupt_counts(struct fscc_port *port,
 #endif
 
 /* Returns -EINVAL if you set an incorrect transmit modifier */
-int fscc_port_set_tx_modifiers(struct fscc_port *port, int value)
+int fscc_port_set_tx_modifiers(struct fscc_port *port, unsigned value)
 {
 	return_val_if_untrue(port, 0);
 

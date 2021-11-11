@@ -24,7 +24,7 @@ Class=MultiportSerial
 ClassGUID={50906cb8-ba12-11d1-bf5d-0000f805f530}
 Provider=%ManufacturerName%
 CatalogFile=fastcom.cat
-DriverVer=08/03/2018,2.7.7
+DriverVer=03/20/2019,2.7.8
 
 [ControlFlags]
 ExcludeFromSelect=*

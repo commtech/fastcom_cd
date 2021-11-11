@@ -1,5 +1,5 @@
 ;
-;    Copyright (C) 2014  Commtech, Inc.
+;    Copyright (C) 2018  Commtech, Inc.
 ;
 ;    This file is part of serialfc-windows.
 ;
@@ -24,7 +24,7 @@ Class=Ports
 ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
 Provider=%ManufacturerName%
 CatalogFile=fastcom.cat
-DriverVer=04/11/2017,2.4.6
+DriverVer=12/12/2018,2.4.7
 
 
 ; ================= Device Install section =====================
