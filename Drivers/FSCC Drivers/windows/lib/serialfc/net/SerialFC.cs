@@ -373,5 +373,50 @@ namespace SerialFC
                 return status;
             }
         }
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int serialfc_enable_fixed_baud_rate(SafeFileHandle h, uint baudRate);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int serialfc_get_fixed_baud_rate(SafeFileHandle h, out int baudRate);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int serialfc_disable_fixed_baud_rate(SafeFileHandle h);
+
+        public uint EnableFixedBaudRate
+        {
+            set
+            {
+                int e = serialfc_enable_fixed_baud_rate(this.Handle, value);
+                if (e >= 1)
+                {
+                    throw new Exception(e.ToString());
+                }
+            }
+        }
+
+        public int GetFixedBaudRate
+        {
+            get
+            {
+                int baudRate;
+                int e = serialfc_get_fixed_baud_rate(this.Handle, out baudRate);
+                if (e >= 1)
+                {
+                    throw new Exception(e.ToString());
+                }
+
+                return baudRate;
+            }
+        }
+
+        public void DisableFixedBaudRate()
+        {
+            int e = serialfc_disable_fixed_baud_rate(this.Handle);
+            if (e >= 1)
+            {
+                throw new Exception(e.ToString());
+            }
+        }
     }
 }
